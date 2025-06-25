@@ -6,6 +6,7 @@ import Logo from '../../assets/logo.svg';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import { useTheme } from '../contexts/ThemeContext';
 import { useFontSettings } from '../contexts/FontContext';
+import { useAuth } from '../contexts/AuthContext';
 import { loginSchema } from '../utils/validationSchemas';
 import AuthForm from '../components/AuthForm';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -18,6 +19,7 @@ export default function LoginScreen() {
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState(null);
+    const { login } = useAuth();
     const theme = useTheme();
     const { fontSize } = useFontSettings();
     const [isRegisterModalVisible, setIsRegisterModalVisible] = useState(false);
@@ -38,6 +40,7 @@ export default function LoginScreen() {
 
             // Store the token
             await AsyncStorage.setItem('token', access_token);
+            await login(access_token); // Atualizar o contexto de autenticação
             
 
             // Now check if the user needs to reset their password

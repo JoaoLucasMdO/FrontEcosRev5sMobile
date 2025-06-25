@@ -25,7 +25,6 @@
     "expo-camera": "~16.1.8",
     "expo-font": "~13.3.1",
     "expo-linear-gradient": "~14.1.5",
-    "expo-linear-gradient": "~14.1.5",
     "expo-status-bar": "~2.2.3",
     "formik": "^2.4.6",
     "react": "19.0.0",

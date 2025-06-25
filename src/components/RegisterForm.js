@@ -1,5 +1,6 @@
 // src/components/RegisterForm.js
 import React, { useState } from 'react';
+import { Alert } from 'react-native';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../contexts/ThemeContext';
@@ -23,16 +24,18 @@ export default function RegisterForm({ onClose }) {
         tipo: "Cliente",
       });
 
-      const data = response.data;
-
       alert("Cadastro realizado com sucesso!");
       onClose(); 
     } catch (error) {
       if (error.response && error.response.data && error.response.data.errors) {
         const errorMsg = error.response.data.errors.map(e => e.msg).join("\n");
-        alert(errorMsg);
+        Alert.alert("Erro no cadastro", errorMsg);
+      } else if (error.response && error.response.data && error.response.data.message) {
+        Alert.alert("Erro no cadastro", error.response.data.message);
+      } else if (error.message) {
+        Alert.alert("Erro de conexão", error.message);
       } else {
-        alert("Erro na conexão com o servidor.", error);
+        Alert.alert("Erro desconhecido", JSON.stringify(error));
       }
       console.error("Erro no cadastro:", error);
     }

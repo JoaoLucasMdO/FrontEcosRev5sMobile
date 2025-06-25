@@ -67,17 +67,15 @@ export default function ProfileScreen() {
   const fetchUserData = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${API_URL}/usuario/me`, {
+      const token = await AsyncStorage.getItem('token');
+      const response = await api.get(`/usuario/me`, {
         headers: {
           'Content-Type': 'application/json',
-          'access-token': await AsyncStorage.getItem('token')
+          'access-token': token
         },
       });
 
-      if (!response.ok) {
-        throw new Error('Erro ao buscar usuário');
-      }
-      const data = await response.json();
+      const data = response.data;
       const user = Array.isArray(data.results) ? data.results[0] : data; // adapte se a estrutura do retorno for diferente
 
       setUserData(prevData => ({
