@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Text, StyleSheet, TouchableOpacity, BackHandler } from "react-native";
-import { LogOut } from "lucide-react-native";
+import { IconButton } from "react-native-paper";
 import { useTheme } from "../contexts/ThemeContext";
 import { useFontSettings } from "../contexts/FontContext";
 import CustomAlert from "./CustomAlert";
@@ -30,10 +30,11 @@ const LogoutButton = () => {
   return (
     <>
       <TouchableOpacity style={styles.button} onPress={handleExit}>
-        <LogOut
+        <IconButton
+          icon="logout"
           size={fontSize.md}
-          color={theme.colors.primary}
-          style={styles.icon}
+          iconColor={theme.colors.primary}
+          style={[styles.icon, { margin: 0 }]}
         />
         <Text
           style={[

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
-import { Gift, Ticket } from "lucide-react-native";
+import { IconButton } from "react-native-paper";
 import { useTheme } from "../contexts/ThemeContext";
 import { useFontSettings } from "../contexts/FontContext";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -207,7 +207,7 @@ const BenefitsScreen = () => {
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <View style={[styles.headerContainer, { backgroundColor: theme.colors.surface }]}>
         <View style={styles.pointsHeader}>
-          <Gift color={theme.colors.primary} size={24} />
+          <IconButton icon="gift" size={24} iconColor={theme.colors.primary} style={{ margin: 0 }} />
           <Text style={[styles.pointsText, { color: theme.colors.text.primary, fontSize: fontSize.lg }]}>Seus Pontos: </Text>
           <Text style={[styles.pointsText, { color: theme.colors.info, fontSize: fontSize.lg }]}>{userPoints}</Text>
         </View>
@@ -225,7 +225,7 @@ const BenefitsScreen = () => {
                 <Text style={[styles.benefitTitle, { color: theme.colors.text.primary, fontSize: fontSize.md }]}>{benefit.nome}</Text>
                 <Text style={[styles.benefitDescription, { color: theme.colors.text.secondary, fontSize: fontSize.sm }]}>{benefit.endereco}</Text>
                 <View style={styles.pointsContainer}>
-                  <Ticket color={theme.colors.info} size={20} />
+                  <IconButton icon="ticket" size={20} iconColor={theme.colors.info} style={{ margin: 0 }} />
                   <Text style={[styles.benefitPoints, { color: theme.colors.info, fontWeight: "bold", fontSize: fontSize.sm }]}>{benefit.pontos} pontos</Text>
                 </View>
                 <Text style={[styles.quantity, { color: theme.colors.text.secondary, fontSize: fontSize.xs }]}>Disponíveis: {benefit.quantidade}</Text>

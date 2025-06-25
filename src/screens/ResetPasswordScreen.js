@@ -9,9 +9,6 @@ import AuthForm from '../components/AuthForm';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
 
-
-
-
 export default function ResetPasswordScreen() {
     const navigation = useNavigation();
     const [isLoading, setIsLoading] = useState(false);

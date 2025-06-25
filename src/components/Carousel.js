@@ -124,6 +124,7 @@ const styles = StyleSheet.create({
   container: {
     height: 300,
     position: 'relative',
+    marginTop: 15,
   },
   slide: {
     width: width,

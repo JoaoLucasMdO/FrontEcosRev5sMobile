@@ -2,7 +2,8 @@ import { View, Text, StyleSheet, ScrollView, Dimensions, StatusBar, TouchableOpa
 import { SafeAreaView } from "react-native-safe-area-context";
 import Carousel from "../components/Carousel";
 import { MaterialIcons } from "@expo/vector-icons";
-import { Coins, Gift, Star } from 'lucide-react-native';
+import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
+import { IconButton } from 'react-native-paper';
 import { useNavigation } from "@react-navigation/native";
 import { useTheme } from "../contexts/ThemeContext";
 import { useFontSettings } from "../contexts/FontContext";
@@ -181,10 +182,10 @@ export default function HomeScreen() {
             </View>
 
             <View style={styles.serviceItem}>
-              <Coins
+              <FontAwesome6
+                name="coins"
                 size={60}
                 color="#fff"
-                accessibilityLabel="Ícone de acúmulo de pontos"
               />
               <Text
                 style={[
@@ -205,10 +206,11 @@ export default function HomeScreen() {
             </View>
 
             <View style={styles.serviceItem}>
-              <Gift
+              <IconButton
+                icon="gift"
                 size={60}
-                color="#fff"
-                accessibilityLabel="Ícone de recompensas exclusivas"
+                iconColor="#fff"
+                style={{ margin: 0 }}
               />
               <Text
                 style={[
@@ -249,12 +251,12 @@ export default function HomeScreen() {
                 {/* Estrelas de avaliação */}
                 <View style={styles.ratingContainer}>
                   {[...Array(5)].map((_, index) => (
-                    <Star
+                    <IconButton
                       key={index}
+                      icon="star"
                       size={24}
-                      color="#FFE136"
-                      fill={"#FFE136"}
-                      accessibilityLabel={`Estrela ${index + 1} de 5`}
+                      iconColor="#FFE136"
+                      style={{ margin: 0 }}
                     />
                   ))}
                 </View>

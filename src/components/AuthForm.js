@@ -1,8 +1,7 @@
 ﻿// src/components/AuthForm.js
 import { Text, View, StyleSheet, Platform } from 'react-native';
-import { TextInput } from 'react-native-paper';
+import { TextInput, IconButton } from 'react-native-paper';
 import { Formik } from 'formik';
-import { Eye, EyeOff } from 'lucide-react-native';
 import { useTheme } from '../contexts/ThemeContext';
 import { useFontSettings } from '../contexts/FontContext';
 
@@ -61,9 +60,12 @@ const AuthForm = ({ initialValues, validationSchema, onSubmit, fields, isPasswor
                   field.secureTextEntry ? (
                     <TextInput.Icon
                       icon={() =>
-                        isPasswordVisible ?
-                          <EyeOff size={24} color={theme.colors.text.disabled} /> :
-                          <Eye size={24} color={theme.colors.text.disabled} />
+                        <IconButton 
+                          icon={isPasswordVisible ? "eye-off" : "eye"} 
+                          size={24} 
+                          iconColor={theme.colors.text.disabled}
+                          style={{ margin: 0 }}
+                        />
                       }
                       onPress={togglePasswordVisibility}
                     />

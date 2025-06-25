@@ -6,7 +6,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useFontSettings } from '../contexts/FontContext';
 import { registerSchema } from '../utils/validationSchemas';
 import AuthForm from './AuthForm';
-import { API_URL } from "@env";
+import api from '../services/api'; 
 
 export default function RegisterForm({ onClose }) {
   const navigation = useNavigation();
@@ -16,32 +16,25 @@ export default function RegisterForm({ onClose }) {
 
   const handleRegister = async (values) => {
     try {
-      const response = await fetch(`${API_URL}/usuario`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          nome: values.name,
-          email: values.email,
-          senha: values.password,
-          tipo: "Cliente",
-        }),
+      const response = await api.post('/usuario', {
+        nome: values.name,
+        email: values.email,
+        senha: values.password,
+        tipo: "Cliente",
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        const errorMsg = data.errors?.map(e => e.msg).join("\n") || "Erro ao cadastrar usuário.";
-        alert(errorMsg);
-        return;
-      }
+      const data = response.data;
 
       alert("Cadastro realizado com sucesso!");
-      onClose(); // Fecha o modal após o registro
+      onClose(); 
     } catch (error) {
+      if (error.response && error.response.data && error.response.data.errors) {
+        const errorMsg = error.response.data.errors.map(e => e.msg).join("\n");
+        alert(errorMsg);
+      } else {
+        alert("Erro na conexão com o servidor.", error);
+      }
       console.error("Erro no cadastro:", error);
-      alert("Erro na conexão com o servidor.");
     }
   };
 

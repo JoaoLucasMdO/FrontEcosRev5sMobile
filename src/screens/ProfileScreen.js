@@ -3,13 +3,13 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image, ScrollView 
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../contexts/ThemeContext';
 import { useFontSettings } from '../contexts/FontContext';
-import { User, CirclePower, Key, Trash2 } from 'lucide-react-native';
+import { IconButton } from 'react-native-paper';
+import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import CustomAlert from '../components/CustomAlert';
 import PasswordModal from '../components/PasswordModal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import api from '../services/api';
-
 
 
 export default function ProfileScreen() {
@@ -243,7 +243,7 @@ export default function ProfileScreen() {
               <Image source={{ uri: userData.profileImage }} style={styles.userImage} />
             ) : (
               <View style={[styles.userImagePlaceholder, { backgroundColor: theme.colors.primary }]}>
-                <User size={60} color={theme.colors.text.inverse} />
+                <FontAwesome6 name="user" size={60} color={theme.colors.text.inverse} />
               </View>
             )}
             <Text style={[styles.title, { color: theme.colors.primary, fontSize: fontSize.lg }]}>
@@ -302,7 +302,7 @@ export default function ProfileScreen() {
               style={[styles.button, { backgroundColor: theme.colors.primary }]}
               onPress={() => setShowPasswordModal(true)}
             >
-              <Key size={24} color={theme.colors.text.inverse} style={{ marginRight: 8 }} />
+              <IconButton icon="key" size={24} iconColor={theme.colors.text.inverse} style={{ margin: 0 }} />
               <Text style={[styles.buttonText, { color: theme.colors.text.inverse, fontSize: fontSize.md }]}>
                 Alterar Senha
               </Text>
@@ -313,7 +313,7 @@ export default function ProfileScreen() {
           style={[styles.logoutButton, { borderColor: theme.colors.error }]}
           onPress={handleLogout}
         >
-          <CirclePower size={24} color={theme.colors.error} />
+          <IconButton icon="power" size={24} iconColor={theme.colors.error} style={{ margin: 0 }} />
           <Text style={[styles.logoutText, { color: theme.colors.error, fontSize: fontSize.md }]}>
             Logout
           </Text>

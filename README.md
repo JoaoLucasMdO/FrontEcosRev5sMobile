@@ -31,8 +31,7 @@ O aplicativo foi desenvolvido como parte do projeto da disciplina de Laboratóri
 
 ### 🎨 Estilização e UI
 ![React Native Paper](https://img.shields.io/badge/React_Native_Paper-%2300BCD4?style=flat)
-![Google Fonts](https://img.shields.io/badge/Google_Fonts-%23EA4335?style=flat&logo=google&logoColor=white) 
-![Lucide](https://img.shields.io/badge/Lucide-%23000000?style=flat&logo=github&logoColor=white)
+![Google Fonts](https://img.shields.io/badge/Google_Fonts-%23EA4335?style=flat&logo=google&logoColor=white)
 
 ### 🔧 Navegação
 ![React Navigation](https://img.shields.io/badge/React_Navigation-%23FF6E40?style=flat) 

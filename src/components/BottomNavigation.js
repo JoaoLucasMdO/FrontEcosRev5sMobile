@@ -1,26 +1,40 @@
 import React from "react";
 import { View, TouchableOpacity, Text, StyleSheet } from "react-native";
-import { House, ArrowRightLeft, History, UserCog, Menu, Info } from "lucide-react-native";
+import { IconButton } from "react-native-paper";
 import { CommonActions, useNavigation } from '@react-navigation/native';
 import { useTheme } from '../contexts/ThemeContext';
 import { useFontSettings } from "../contexts/FontContext";
+import { useAuth } from '../contexts/AuthContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const BottomNavigation = ({ state, navigation }) => {
   const theme = useTheme();
   const { fontSize } = useFontSettings();
+  const { isAuthenticated } = useAuth();
+  const insets = useSafeAreaInsets();
 
   const openDrawer = () => {
     navigation.openDrawer();
   };
 
-  const tabs = [
-    { name: "HomeTab", icon: House, label: "Início" },
-    { name: "BeneficiosTab", icon: ArrowRightLeft, label: "Troca" },
-    { name: "HistoricoTab", icon: History, label: "Histórico" },
-    { name: "PerfilTab", icon: UserCog, label: "Perfil" },
-    { name: "SobreTab", icon: Info, label: "Sobre" },
-    { name: "MenuTab", icon: Menu, label: "Menu", isDrawer: true },
+  // Abas para usuários não autenticados (limitadas)
+  const publicTabs = [
+    { name: "HomeTab", icon: "home", label: "Início" },
+    { name: "SobreTab", icon: "information", label: "Sobre" },
+    { name: "MenuTab", icon: "menu", label: "Menu", isDrawer: true },
   ];
+
+  // Abas para usuários autenticados (completas)
+  const authenticatedTabs = [
+    { name: "HomeTab", icon: "home", label: "Início" },
+    { name: "BeneficiosTab", icon: "swap-horizontal", label: "Troca" },
+    { name: "HistoricoTab", icon: "history", label: "Histórico" },
+    { name: "PerfilTab", icon: "account-cog", label: "Perfil" },
+    { name: "SobreTab", icon: "information", label: "Sobre" },
+    { name: "MenuTab", icon: "menu", label: "Menu", isDrawer: true },
+  ];
+
+  const tabs = isAuthenticated ? authenticatedTabs : publicTabs;
 
   const handleTabPress = (tab) => {
     if (tab.isDrawer) {
@@ -31,7 +45,14 @@ const BottomNavigation = ({ state, navigation }) => {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.border }]}> 
+    <View style={[
+      styles.container, 
+      { 
+        backgroundColor: theme.colors.surface, 
+        borderTopColor: theme.colors.border,
+        paddingBottom: Math.max(insets.bottom, 10)
+      }
+    ]}> 
       {tabs.map((tab) => {
         const isFocused = state.routes[state.index]?.name === tab.name;
 
@@ -41,7 +62,12 @@ const BottomNavigation = ({ state, navigation }) => {
             style={styles.tab}
             onPress={() => handleTabPress(tab)}
           >
-            <tab.icon size={24} color={isFocused ? theme.colors.primary : theme.colors.text.secondary} />
+            <IconButton 
+              icon={tab.icon} 
+              size={24} 
+              iconColor={isFocused ? theme.colors.primary : theme.colors.text.secondary} 
+              style={{ margin: 0 }}
+            />
             <Text style={[
               styles.tabLabel,
               { fontSize: fontSize.md, color: theme.colors.text.secondary },
@@ -60,7 +86,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     borderTopWidth: 1,
-    paddingVertical: 10,
+    paddingTop: 10,
     paddingHorizontal: 15,
     justifyContent: "space-around",
     alignItems: "center",

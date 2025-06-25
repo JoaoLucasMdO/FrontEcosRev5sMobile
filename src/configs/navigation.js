@@ -1,6 +1,5 @@
-// Modificação para MainNavigation.js
 import React from "react";
-import { SafeAreaView, View, StyleSheet, Text } from "react-native";
+import { SafeAreaView, View, StyleSheet, Text, BackHandler } from "react-native";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createStackNavigator } from "@react-navigation/stack";
@@ -21,13 +20,24 @@ import ResetPasswordScreen from "../screens/ResetPasswordScreen";
 import BottomNavigation from "../components/BottomNavigation";
 import LogoutButton from "../components/LogoutButton";
 import Header from "../components/AppHeader";
-import { House, ArrowRightLeft, History, UserCog, Info, QrCode, LogIn, Settings } from "lucide-react-native";
+import { IconButton } from "react-native-paper";
 
 const Drawer = createDrawerNavigator();
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
-export function TabScreens() {
+// Telas públicas (sem autenticação) - apenas abas básicas
+export function PublicTabScreens() {
+  return (
+    <Tab.Navigator tabBar={(props) => <BottomNavigation {...props} />} screenOptions={{ headerShown: false }}>
+      <Tab.Screen name="HomeTab" component={HomeScreen} options={{ title: "Início" }} />
+      <Tab.Screen name="SobreTab" component={SobreScreen} options={{ title: "Sobre" }} />
+    </Tab.Navigator>
+  );
+}
+
+// Telas autenticadas (com autenticação) - todas as abas
+export function AuthenticatedTabScreens() {
   return (
     <Tab.Navigator tabBar={(props) => <BottomNavigation {...props} />} screenOptions={{ headerShown: false }}>
       <Tab.Screen name="HomeTab" component={HomeScreen} options={{ title: "Início" }} />
@@ -35,11 +45,11 @@ export function TabScreens() {
       <Tab.Screen name="HistoricoTab" component={HistoricoScreen} options={{ title: "Histórico" }} />
       <Tab.Screen name="SobreTab" component={SobreScreen} options={{ title: "Sobre" }} />
       <Tab.Screen name="PerfilTab" component={PerfilScreen} options={{ title: "Perfil" }} />
-      <Tab.Screen name="ResetTab" component={ResetPasswordScreen} options={{ title: "Reset" }} />
     </Tab.Navigator>
   );
 }
 
+// Stack de autenticação (login, cadastro, recuperação)
 export function AuthStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -53,7 +63,6 @@ export function AuthStack() {
         component={ResetPasswordScreen}
         options={{
           headerShown: false,
-          // Prevent going back to login
           gestureEnabled: false
         }}
       />
@@ -61,7 +70,102 @@ export function AuthStack() {
   );
 }
 
-export function AppStack() {
+// Componente personalizado para botão "Sair" no drawer público
+function ExitButton() {
+  const theme = useTheme();
+  const { fontSize } = useFontSettings();
+  
+  const handleExit = () => {
+    // Fechar o aplicativo
+    BackHandler.exitApp();
+  };
+
+  return (
+    <View style={styles.exitContainer}>
+      <IconButton 
+        icon="exit-to-app" 
+        size={24} 
+        iconColor="#14AE5C" 
+        style={{ margin: 0 }}
+        onPress={handleExit}
+      />
+      <Text style={[styles.exitText, { 
+        color: theme.colors.text.primary, 
+        fontSize: fontSize.md 
+      }]}>
+        Sair
+      </Text>
+    </View>
+  );
+}
+
+// Drawer para usuários não autenticados (acesso limitado)
+export function PublicDrawer() {
+  const theme = useTheme();
+  const { fontSize, fontFamily } = useFontSettings();
+
+  return (
+    <Drawer.Navigator
+      drawerContent={(props) => (
+        <SafeAreaView style={[styles.drawerContainer, { backgroundColor: theme.colors.surface }]}>
+          <View style={[styles.drawerHeader, { backgroundColor: theme.colors.primary }]}>
+            <Text style={[styles.drawerTitle, { 
+              color: theme.colors.text.inverse, 
+              fontSize: fontSize.xl,
+              marginTop: 10,
+            }]}>
+              EcosRev
+            </Text>
+          </View>
+          <View style={[styles.drawerDivider, { borderBottomColor: theme.colors.border }]} />
+          <DrawerItemList {...props} />
+          <View style={styles.exitContainer}>
+            <ExitButton />
+          </View>
+        </SafeAreaView>
+      )}
+      screenOptions={{ 
+        headerShown: false,
+        drawerActiveTintColor: theme.colors.primary,
+        drawerInactiveTintColor: theme.colors.text.primary,
+        drawerActiveBackgroundColor: `${theme.colors.primary}20`,
+        drawerInactiveBackgroundColor: 'transparent',
+        drawerLabelStyle: {
+          marginLeft: -5,
+          fontSize: fontSize.md,
+          fontWeight: '500',
+          fontFamily: fontFamily,
+        },
+        drawerStyle: {
+          backgroundColor: theme.colors.surface,
+          width: 280,
+          borderRightColor: theme.colors.border,
+          borderRightWidth: 1,
+        }
+      }}
+    >
+      <Drawer.Screen 
+        name="Main" 
+        component={PublicTabScreens} 
+        options={{ 
+          title: "Início", 
+          drawerIcon: ({size}) => <IconButton icon="home" size={size} iconColor="#14AE5C" style={{ margin: 0 }} /> 
+        }} 
+      />
+      <Drawer.Screen 
+        name="Login" 
+        component={LoginScreen} 
+        options={{ 
+          title: "Entrar", 
+          drawerIcon: ({size}) => <IconButton icon="login" size={size} iconColor="#14AE5C" style={{ margin: 0 }} /> 
+        }} 
+      />
+    </Drawer.Navigator>
+  );
+}
+
+// Drawer para usuários autenticados (acesso completo)
+export function AuthenticatedDrawer() {
   const theme = useTheme();
   const { fontSize, fontFamily } = useFontSettings();
 
@@ -89,7 +193,7 @@ export function AppStack() {
         headerShown: false,
         drawerActiveTintColor: theme.colors.primary,
         drawerInactiveTintColor: theme.colors.text.primary,
-        drawerActiveBackgroundColor: `${theme.colors.primary}20`, // 20% de opacidade
+        drawerActiveBackgroundColor: `${theme.colors.primary}20`,
         drawerInactiveBackgroundColor: 'transparent',
         drawerLabelStyle: {
           marginLeft: -5,
@@ -107,34 +211,26 @@ export function AppStack() {
     >
       <Drawer.Screen 
         name="Main" 
-        component={TabScreens} 
+        component={AuthenticatedTabScreens} 
         options={{ 
           title: "Início", 
-          drawerIcon: ({size}) => <House color="#14AE5C" size={size} /> 
+          drawerIcon: ({size}) => <IconButton icon="home" size={size} iconColor="#14AE5C" style={{ margin: 0 }} /> 
         }} 
       />
       <Drawer.Screen 
         name="Perfil" 
-        component={TabScreens} 
+        component={AuthenticatedTabScreens} 
         options={{ 
           title: "Perfil",
-          drawerIcon: ({size}) => <UserCog color="#14AE5C" size={size} /> 
-        }} 
-      />
-      <Drawer.Screen 
-        name="Login" 
-        component={LoginScreen} 
-        options={{ 
-          title: "Entrar", 
-          drawerIcon: ({size}) => <LogIn color="#14AE5C" size={size} /> 
+          drawerIcon: ({size}) => <IconButton icon="account-cog" size={size} iconColor="#14AE5C" style={{ margin: 0 }} /> 
         }} 
       />
       <Drawer.Screen 
         name="Troca" 
-        component={TabScreens} 
+        component={AuthenticatedTabScreens} 
         options={{ 
           title: "Troca",
-          drawerIcon: ({size}) => <ArrowRightLeft color="#14AE5C" size={size} /> 
+          drawerIcon: ({size}) => <IconButton icon="swap-horizontal" size={size} iconColor="#14AE5C" style={{ margin: 0 }} /> 
         }} 
       />
       <Drawer.Screen 
@@ -142,23 +238,23 @@ export function AppStack() {
         component={QRCodeScannerScreen} 
         options={{ 
           title: "QR Code",
-          drawerIcon: ({size}) => <QrCode color="#14AE5C" size={size} /> 
+          drawerIcon: ({size}) => <IconButton icon="qrcode" size={size} iconColor="#14AE5C" style={{ margin: 0 }} /> 
         }} 
       />
       <Drawer.Screen 
         name="Historico" 
-        component={TabScreens} 
+        component={AuthenticatedTabScreens} 
         options={{ 
           title: "Histórico",
-          drawerIcon: ({size}) => <History color="#14AE5C" size={size} /> 
+          drawerIcon: ({size}) => <IconButton icon="history" size={size} iconColor="#14AE5C" style={{ margin: 0 }} /> 
         }} 
       />
       <Drawer.Screen 
         name="Sobre" 
-        component={TabScreens} 
+        component={AuthenticatedTabScreens} 
         options={{ 
           title: "Sobre",
-          drawerIcon: ({size}) => <Info color="#14AE5C" size={size} /> 
+          drawerIcon: ({size}) => <IconButton icon="information" size={size} iconColor="#14AE5C" style={{ margin: 0 }} /> 
         }} 
       />
       <Drawer.Screen 
@@ -166,24 +262,23 @@ export function AppStack() {
         component={ConfigScreen} 
         options={{ 
           title: "Configurações",
-          drawerIcon: ({size}) => <Settings color="#14AE5C" size={size} /> 
+          drawerIcon: ({size}) => <IconButton icon="cog" size={size} iconColor="#14AE5C" style={{ margin: 0 }} /> 
         }} 
       />
     </Drawer.Navigator>
   );
 }
 
-// Modificamos o fluxo para ter um Stack Navigator de alto nível
+// Navegação principal que controla o fluxo baseado na autenticação
 export function MainNavigation() {
   const { isAuthenticated } = useAuth();
   
-  // Usamos um Stack Navigator principal para poder ter acesso a todas as telas
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       {isAuthenticated ? (
         <>
-          <Stack.Screen name="AppStack" component={AppStack} />
-          {/* ResetPassword também precisa estar acessível quando autenticado */}
+          {/* Usuário logado - acesso completo */}
+          <Stack.Screen name="AuthenticatedApp" component={AuthenticatedDrawer} />
           <Stack.Screen 
             name="ResetPassword" 
             component={ResetPasswordScreen} 
@@ -191,16 +286,26 @@ export function MainNavigation() {
           />
         </>
       ) : (
-        <Stack.Screen name="AuthStack" component={AuthStack} />
+        <>
+          {/* Usuário não logado - acesso limitado */}
+          <Stack.Screen name="PublicApp" component={PublicDrawer} />
+          <Stack.Screen name="AuthStack" component={AuthStack} />
+        </>
       )}
     </Stack.Navigator>
   );
 }
 
+// Manter compatibilidade com código antigo
+export function AppStack() {
+  const { isAuthenticated } = useAuth();
+  return isAuthenticated ? <AuthenticatedDrawer /> : <PublicDrawer />;
+}
+
 const styles = StyleSheet.create({
   drawerContainer: {
     flex: 1,
-    paddingTop: 15, // Adicionado um pequeno padding para dar espaço ao topo
+    paddingTop: 15,
   },
   drawerHeader: {
     padding: 15,
@@ -221,5 +326,17 @@ const styles = StyleSheet.create({
     marginTop: 'auto',
     marginBottom: 20,
     paddingHorizontal: 16,
+  },
+  exitContainer: {
+    marginTop: 'auto',
+    marginBottom: 20,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  exitText: {
+    marginLeft: 10,
+    fontWeight: 'bold',
   },
 });

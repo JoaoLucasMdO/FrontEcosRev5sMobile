@@ -5,7 +5,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { ThemeProvider } from "./src/contexts/ThemeContext";
 import { FontSettingsProvider } from "./src/contexts/FontContext";
 import LoadingScreen from "./src/screens/LoadingScreen";
-import { AppStack} from "./src/configs/navigation";
+import { MainNavigation } from "./src/configs/navigation";
 import { Provider as PaperProvider } from 'react-native-paper';
 import { AuthProvider } from "./src/contexts/AuthContext";
 
@@ -41,7 +41,7 @@ export default function App() {
         <FontSettingsProvider>
           <PaperProvider>
             <NavigationContainer>
-              <AppStack />
+              <MainNavigation />
             </NavigationContainer>
           </PaperProvider>
         </FontSettingsProvider>

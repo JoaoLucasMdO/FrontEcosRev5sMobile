@@ -13,8 +13,6 @@ import RegisterForm from '../components/RegisterForm';
 import ForgotPasswordForm from '../components/ForgotPasswordForm';
 import api from '../services/api';
 
-
-
 export default function LoginScreen() {
     const navigation = useNavigation();
     const [showPassword, setShowPassword] = useState(false);

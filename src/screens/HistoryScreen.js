@@ -4,11 +4,9 @@ import { View, Text, SectionList, StyleSheet, ActivityIndicator, Alert } from 'r
 import { useFocusEffect } from '@react-navigation/native';
 import { useTheme } from '../contexts/ThemeContext';
 import { useFontSettings } from '../contexts/FontContext';
-import { ArrowUp, ArrowDown } from 'lucide-react-native';
+import { IconButton } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
-
-
 
 const groupByMonth = (data) => {
   const grouped = {};
@@ -127,9 +125,9 @@ const HistoryScreen = ({ route }) => {
           </Text>
           <View style={styles.pointsContainer}>
             {isNegative ? (
-              <ArrowDown color={theme.colors.error} size={16} />
+              <IconButton icon="arrow-down" size={16} iconColor={theme.colors.error} style={{ margin: 0 }} />
             ) : (
-              <ArrowUp color={theme.colors.success} size={16} />
+              <IconButton icon="arrow-up" size={16} iconColor={theme.colors.success} style={{ margin: 0 }} />
             )}
             <Text
               style={[

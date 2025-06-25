@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "appMobile",
-    "slug": "appMobile",
+    "name": "EcosRev",
+    "slug": "ecosrev",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -17,13 +17,18 @@
       "supportsTablet": true
     },
     "android": {
+      
+      "usesCleartextTraffic": true,
+      
       "adaptiveIcon": {
         "backgroundColor": "#ffffff"
       },
       "permissions": [
-        "android.permission.CAMERA"
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
       ],
-      "newArchEnabled": true
+      "newArchEnabled": true,
+      "package": "com.EcosRev.EcosRevApp"
     },
     "web": {},
     "plugins": [
@@ -34,6 +39,11 @@
         }
       ],
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "9d7bba4f-e383-4807-ab8d-ff3a53774db1"
+      }
+    }
   }
 }
