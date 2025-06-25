@@ -21,9 +21,11 @@
         "backgroundColor": "#ffffff"
       },
       "permissions": [
-        "android.permission.CAMERA"
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
       ],
-      "newArchEnabled": true
+      "newArchEnabled": true,
+      "package": "com.EcosRev.EcosRevApp"
     },
     "web": {},
     "plugins": [
@@ -34,6 +36,11 @@
         }
       ],
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "88761e85-9b08-4677-b580-3697b2a165f4"
+      }
+    }
   }
 }
