@@ -27,16 +27,27 @@ export default function RegisterForm({ onClose }) {
       alert("Cadastro realizado com sucesso!");
       onClose(); 
     } catch (error) {
-      if (error.response && error.response.data && error.response.data.errors) {
-        const errorMsg = error.response.data.errors.map(e => e.msg).join("\n");
-        Alert.alert("Erro no cadastro", errorMsg);
-      } else if (error.response && error.response.data && error.response.data.message) {
-        Alert.alert("Erro no cadastro", error.response.data.message);
+      let msg = '';
+      if (error.response) {
+        // Erro retornado pelo servidor
+        msg += `Status: ${error.response.status}\n`;
+        if (error.response.data && error.response.data.errors) {
+          msg += error.response.data.errors.map(e => e.msg).join("\n");
+        } else if (error.response.data && error.response.data.message) {
+          msg += error.response.data.message;
+        } else {
+          msg += JSON.stringify(error.response.data);
+        }
+      } else if (error.request) {
+        // Sem resposta do servidor
+        msg = 'Sem resposta do servidor. Verifique sua conexão ou se o backend está online.';
       } else if (error.message) {
-        Alert.alert("Erro de conexão", error.message);
+        // Erro de configuração ou rede
+        msg = `Erro: ${error.message}`;
       } else {
-        Alert.alert("Erro desconhecido", JSON.stringify(error));
+        msg = `Erro desconhecido: ${JSON.stringify(error)}`;
       }
+      Alert.alert("Erro no cadastro", msg);
       console.error("Erro no cadastro:", error);
     }
   };

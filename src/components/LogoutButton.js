@@ -3,12 +3,14 @@ import { Text, StyleSheet, TouchableOpacity, BackHandler } from "react-native";
 import { IconButton } from "react-native-paper";
 import { useTheme } from "../contexts/ThemeContext";
 import { useFontSettings } from "../contexts/FontContext";
+import { useAuth } from "../contexts/AuthContext";
 import CustomAlert from "./CustomAlert";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const LogoutButton = () => {
   const theme = useTheme();
   const { fontSize, fontFamily } = useFontSettings();
+  const { logout } = useAuth();
   const [alertVisible, setAlertVisible] = useState(false);
 
   const handleExit = () => {
@@ -17,13 +19,15 @@ const LogoutButton = () => {
 
   const confirmExit = async () => {
     try {
-      await AsyncStorage.removeItem("token"); // Remova aqui o item que você salvou no login
-      await AsyncStorage.removeItem("user")
+      // Usar o método logout do AuthContext
+      await logout();
+      // Remover dados adicionais do usuário
+      await AsyncStorage.removeItem("user");
     } catch (e) {
-      console.error("Erro ao remover token do AsyncStorage", e);
+      console.error("Erro ao fazer logout", e);
     } finally {
       setAlertVisible(false);
-      BackHandler.exitApp();
+      // A navegação será automática devido à mudança do estado isAuthenticated
     }
   };
 

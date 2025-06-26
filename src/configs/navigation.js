@@ -1,5 +1,5 @@
 import React from "react";
-import { SafeAreaView, View, StyleSheet, Text, BackHandler } from "react-native";
+import { SafeAreaView, View, StyleSheet, Text, BackHandler, TouchableOpacity } from "react-native";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createStackNavigator } from "@react-navigation/stack";
@@ -36,14 +36,13 @@ export function PublicTabScreens() {
   );
 }
 
-// Telas autenticadas (com autenticação) - todas as abas
+// Telas autenticadas (com autenticação) - removida aba "Sobre" do bottom navigation
 export function AuthenticatedTabScreens() {
   return (
     <Tab.Navigator tabBar={(props) => <BottomNavigation {...props} />} screenOptions={{ headerShown: false }}>
       <Tab.Screen name="HomeTab" component={HomeScreen} options={{ title: "Início" }} />
       <Tab.Screen name="BeneficiosTab" component={BeneficiosScreen} options={{ title: "Troca" }} />
       <Tab.Screen name="HistoricoTab" component={HistoricoScreen} options={{ title: "Histórico" }} />
-      <Tab.Screen name="SobreTab" component={SobreScreen} options={{ title: "Sobre" }} />
       <Tab.Screen name="PerfilTab" component={PerfilScreen} options={{ title: "Perfil" }} />
     </Tab.Navigator>
   );
@@ -164,43 +163,118 @@ export function PublicDrawer() {
   );
 }
 
+// Componente personalizado para o drawer que navega para abas específicas
+function CustomDrawerContent(props) {
+  const theme = useTheme();
+  const { fontSize, fontFamily } = useFontSettings();
+  
+  const drawerItems = [
+    { 
+      label: 'Início', 
+      icon: 'home', 
+      onPress: () => {
+        props.navigation.navigate('Main', { screen: 'HomeTab' });
+        props.navigation.closeDrawer();
+      }
+    },
+    { 
+      label: 'Perfil', 
+      icon: 'account-cog', 
+      onPress: () => {
+        props.navigation.navigate('Main', { screen: 'PerfilTab' });
+        props.navigation.closeDrawer();
+      }
+    },
+    { 
+      label: 'Troca', 
+      icon: 'swap-horizontal', 
+      onPress: () => {
+        props.navigation.navigate('Main', { screen: 'BeneficiosTab' });
+        props.navigation.closeDrawer();
+      }
+    },
+    { 
+      label: 'Histórico', 
+      icon: 'history', 
+      onPress: () => {
+        props.navigation.navigate('Main', { screen: 'HistoricoTab' });
+        props.navigation.closeDrawer();
+      }
+    },
+    { 
+      label: 'QR Code', 
+      icon: 'qrcode', 
+      onPress: () => {
+        props.navigation.navigate('QrCode');
+        props.navigation.closeDrawer();
+      }
+    },
+    { 
+      label: 'Configurações', 
+      icon: 'cog', 
+      onPress: () => {
+        props.navigation.navigate('Configurações');
+        props.navigation.closeDrawer();
+      }
+    }
+  ];
+
+  return (
+    <SafeAreaView style={[styles.drawerContainer, { backgroundColor: theme.colors.surface }]}>
+      <View style={[styles.drawerHeader, { backgroundColor: theme.colors.primary }]}>
+        <Text style={[styles.drawerTitle, { 
+          color: theme.colors.text.inverse, 
+          fontSize: fontSize.xl,
+          marginTop: 10,
+        }]}>
+          EcosRev
+        </Text>
+      </View>
+      <View style={[styles.drawerDivider, { borderBottomColor: theme.colors.border }]} />
+      
+      {/* Custom drawer items */}
+      <View style={{ flex: 1 }}>
+        {drawerItems.map((item, index) => (
+          <TouchableOpacity
+            key={index}
+            style={styles.drawerItem}
+            onPress={item.onPress}
+          >
+            <IconButton 
+              icon={item.icon} 
+              size={24} 
+              iconColor="#14AE5C" 
+              style={{ margin: 0, marginRight: 10 }} 
+            />
+            <Text style={[
+              styles.drawerItemText,
+              { 
+                color: theme.colors.text.primary, 
+                fontSize: fontSize.md,
+                fontFamily: fontFamily,
+              }
+            ]}>
+              {item.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <View style={styles.logoutContainer}>
+        <LogoutButton />
+      </View>
+    </SafeAreaView>
+  );
+}
 // Drawer para usuários autenticados (acesso completo)
 export function AuthenticatedDrawer() {
   const theme = useTheme();
-  const { fontSize, fontFamily } = useFontSettings();
 
   return (
     <Drawer.Navigator
-      drawerContent={(props) => (
-        <SafeAreaView style={[styles.drawerContainer, { backgroundColor: theme.colors.surface }]}>
-          <View style={[styles.drawerHeader, { backgroundColor: theme.colors.primary }]}>
-            <Text style={[styles.drawerTitle, { 
-              color: theme.colors.text.inverse, 
-              fontSize: fontSize.xl,
-              marginTop: 10,
-            }]}>
-              EcosRev
-            </Text>
-          </View>
-          <View style={[styles.drawerDivider, { borderBottomColor: theme.colors.border }]} />
-          <DrawerItemList {...props} />
-          <View style={styles.logoutContainer}>
-            <LogoutButton />
-          </View>
-        </SafeAreaView>
-      )}
+      drawerContent={(props) => <CustomDrawerContent {...props} />}
       screenOptions={{ 
         headerShown: false,
-        drawerActiveTintColor: theme.colors.primary,
-        drawerInactiveTintColor: theme.colors.text.primary,
-        drawerActiveBackgroundColor: `${theme.colors.primary}20`,
-        drawerInactiveBackgroundColor: 'transparent',
-        drawerLabelStyle: {
-          marginLeft: -5,
-          fontSize: fontSize.md,
-          fontWeight: '500',
-          fontFamily: fontFamily,
-        },
         drawerStyle: {
           backgroundColor: theme.colors.surface,
           width: 280,
@@ -218,43 +292,11 @@ export function AuthenticatedDrawer() {
         }} 
       />
       <Drawer.Screen 
-        name="Perfil" 
-        component={AuthenticatedTabScreens} 
-        options={{ 
-          title: "Perfil",
-          drawerIcon: ({size}) => <IconButton icon="account-cog" size={size} iconColor="#14AE5C" style={{ margin: 0 }} /> 
-        }} 
-      />
-      <Drawer.Screen 
-        name="Troca" 
-        component={AuthenticatedTabScreens} 
-        options={{ 
-          title: "Troca",
-          drawerIcon: ({size}) => <IconButton icon="swap-horizontal" size={size} iconColor="#14AE5C" style={{ margin: 0 }} /> 
-        }} 
-      />
-      <Drawer.Screen 
         name="QrCode" 
         component={QRCodeScannerScreen} 
         options={{ 
           title: "QR Code",
           drawerIcon: ({size}) => <IconButton icon="qrcode" size={size} iconColor="#14AE5C" style={{ margin: 0 }} /> 
-        }} 
-      />
-      <Drawer.Screen 
-        name="Historico" 
-        component={AuthenticatedTabScreens} 
-        options={{ 
-          title: "Histórico",
-          drawerIcon: ({size}) => <IconButton icon="history" size={size} iconColor="#14AE5C" style={{ margin: 0 }} /> 
-        }} 
-      />
-      <Drawer.Screen 
-        name="Sobre" 
-        component={AuthenticatedTabScreens} 
-        options={{ 
-          title: "Sobre",
-          drawerIcon: ({size}) => <IconButton icon="information" size={size} iconColor="#14AE5C" style={{ margin: 0 }} /> 
         }} 
       />
       <Drawer.Screen 
@@ -271,7 +313,12 @@ export function AuthenticatedDrawer() {
 
 // Navegação principal que controla o fluxo baseado na autenticação
 export function MainNavigation() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
+  
+  // Mostrar tela de loading enquanto verifica autenticação
+  if (isLoading) {
+    return null; // Ou uma tela de loading personalizada
+  }
   
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -321,6 +368,17 @@ const styles = StyleSheet.create({
   drawerDivider: {
     borderBottomWidth: 1,
     marginBottom: 12,
+  },
+  drawerItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    marginVertical: 2,
+  },
+  drawerItemText: {
+    fontSize: 16,
+    fontWeight: '500',
   },
   logoutContainer: {
     marginTop: 'auto',

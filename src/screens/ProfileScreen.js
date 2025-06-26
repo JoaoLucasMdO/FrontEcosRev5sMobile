@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image, ScrollView 
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../contexts/ThemeContext';
 import { useFontSettings } from '../contexts/FontContext';
+import { useAuth } from '../contexts/AuthContext';
 import { IconButton } from 'react-native-paper';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import CustomAlert from '../components/CustomAlert';
@@ -14,6 +15,7 @@ import api from '../services/api';
 
 export default function ProfileScreen() {
   const navigation = useNavigation();
+   const { logout } = useAuth();
   const theme = useTheme();
   const { fontSize } = useFontSettings(); const [userData, setUserData] = useState({
     _id: '',
@@ -145,9 +147,11 @@ export default function ProfileScreen() {
       showCancelButton: true,
       onConfirm: async () => {
         try {
-          await AsyncStorage.removeItem('token');
+        
+          // Usar o método logout do AuthContext
+          await logout();
+          // Remover dados adicionais
           await AsyncStorage.removeItem('user');
-          navigation.navigate('Login');
         } catch (error) {
           console.error('Erro ao remover token:', error);
         }

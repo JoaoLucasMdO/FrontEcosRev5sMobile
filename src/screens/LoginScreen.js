@@ -16,10 +16,10 @@ import api from '../services/api';
 
 export default function LoginScreen() {
     const navigation = useNavigation();
+    const { login } = useAuth(); // Adicionar o hook useAuth
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState(null);
-    const { login } = useAuth();
     const theme = useTheme();
     const { fontSize } = useFontSettings();
     const [isRegisterModalVisible, setIsRegisterModalVisible] = useState(false);
@@ -38,16 +38,20 @@ export default function LoginScreen() {
 
             const { access_token, redirect_url } = response.data;
 
-            // Store the token
-            await AsyncStorage.setItem('token', access_token);
-            await login(access_token); // Atualizar o contexto de autenticação
+            // Usar o método login do AuthContext em vez de salvar manualmente
+            const loginSuccess = await login(access_token);
             
+            if (!loginSuccess) {
+                setErrorMessage('Erro ao salvar dados de autenticação.');
+                return;
+            }
 
             // Now check if the user needs to reset their password
             const userInfoResponse = await api.get('/usuario/me', {
                 headers: { 'access-token': access_token }
             });
             await AsyncStorage.setItem('user', userInfoResponse.data._id)
+            
             // Se o usuário tem uma senha temporária (token de redefinição), redirecionar para a tela de redefinição de senha
             if (userInfoResponse.data.resetPasswordToken) {
                 // Mostrar uma mensagem breve de sucesso
@@ -56,16 +60,13 @@ export default function LoginScreen() {
                 // Armazenar informações necessárias para a tela de redefinição de senha
                 await AsyncStorage.setItem('user_email', values.email);
 
-                // MODIFICAÇÃO AQUI: Usar o método de navegação correto
-                // Para navegadores aninhados, precisamos usar um método diferente
-                navigation.navigate('Main', { screen: 'ResetTab' });
+                // A navegação será automática devido à mudança do estado isAuthenticated
+                // mas vamos navegar para a tela de reset password diretamente
+                navigation.navigate('ResetPassword');
             } else {
-                // Fluxo normal de login - navegar para a tela apropriada com base no tipo de usuário
+                // Fluxo normal de login - a navegação será automática devido ao AuthContext
                 alert('Login realizado com sucesso!');
-
-
-                // Navegação para home
-                navigation.navigate('Main', { screen: 'HomeTab' });
+                // A navegação será automática devido à mudança do estado isAuthenticated
             }
         } catch (error) {
             console.error('Login error:', error);

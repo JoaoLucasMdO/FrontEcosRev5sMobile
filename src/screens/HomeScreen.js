@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, Dimensions, StatusBar, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Dimensions, StatusBar, TouchableOpacity, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Carousel from "../components/Carousel";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -7,18 +7,35 @@ import { IconButton } from 'react-native-paper';
 import { useNavigation } from "@react-navigation/native";
 import { useTheme } from "../contexts/ThemeContext";
 import { useFontSettings } from "../contexts/FontContext";
+import { useAuth } from "../contexts/AuthContext";
 
 const { width } = Dimensions.get("window");
 
 export default function HomeScreen() {
   const navigation = useNavigation();
+  const { isAuthenticated } = useAuth();
   
   const theme = useTheme();
   const { fontSize } = useFontSettings();
 
   const navigateToLogin = () => {
-  navigation.navigate("Login");
-};
+    if (isAuthenticated) {
+      // Usuário já está logado, mostrar mensagem
+      Alert.alert(
+        "Você já está logado!",
+        "Você já possui uma conta ativa no EcosRev. Explore as funcionalidades do app através do menu ou das abas na parte inferior.",
+        [
+          {
+            text: "OK",
+            style: "default"
+          }
+        ]
+      );
+    } else {
+      // Usuário não está logado, navegar para tela de login
+      navigation.navigate("Login");
+    }
+  };
 
   //Carousel de Imagens
   const carouselSlides = [
@@ -126,7 +143,7 @@ export default function HomeScreen() {
             ]}
             onPress={navigateToLogin}
             activeOpacity={0.7}
-            accessibilityLabel="Botão Começar Agora. Pressione para ir para a tela de login."
+            accessibilityLabel={isAuthenticated ? "Botão Explorar App. Você já está logado." : "Botão Começar Agora. Pressione para ir para a tela de login."}
           >
             <Text
               style={[
@@ -134,7 +151,7 @@ export default function HomeScreen() {
                 { color: theme.colors.text.inverse, fontSize: fontSize.md },
               ]}
             >
-              Começar Agora
+              {isAuthenticated ? "Explorar App" : "Começar Agora"}
             </Text>
           </TouchableOpacity>
         </View>

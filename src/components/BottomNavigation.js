@@ -24,13 +24,12 @@ const BottomNavigation = ({ state, navigation }) => {
     { name: "MenuTab", icon: "menu", label: "Menu", isDrawer: true },
   ];
 
-  // Abas para usuários autenticados (completas)
+  // Abas para usuários autenticados (completas) - removida aba "Sobre"
   const authenticatedTabs = [
     { name: "HomeTab", icon: "home", label: "Início" },
     { name: "BeneficiosTab", icon: "swap-horizontal", label: "Troca" },
     { name: "HistoricoTab", icon: "history", label: "Histórico" },
     { name: "PerfilTab", icon: "account-cog", label: "Perfil" },
-    { name: "SobreTab", icon: "information", label: "Sobre" },
     { name: "MenuTab", icon: "menu", label: "Menu", isDrawer: true },
   ];
 
