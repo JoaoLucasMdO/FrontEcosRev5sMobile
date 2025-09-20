@@ -143,14 +143,7 @@ export function PublicDrawer() {
         }
       }}
     >
-      <Drawer.Screen 
-        name="Main" 
-        component={PublicTabScreens} 
-        options={{ 
-          title: "Início", 
-          drawerIcon: ({size}) => <IconButton icon="home" size={size} iconColor="#14AE5C" style={{ margin: 0 }} /> 
-        }} 
-      />
+      
       <Drawer.Screen 
         name="Login" 
         component={LoginScreen} 

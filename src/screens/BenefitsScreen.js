@@ -46,8 +46,8 @@ const BenefitsScreen = () => {
         headers: { "access-token": token }
       });
 
-      if (response.data && response.data.length > 0) {
-        setUserPoints(response.data[0].pontos);
+      if (response.data) {
+        setUserPoints(response.data.pontos);
       }
     } catch (error) {
       console.error("Error fetching user points:", error);

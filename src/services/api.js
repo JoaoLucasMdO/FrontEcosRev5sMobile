@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'https://ecosrev-api.duckdns.org/api',
+  baseURL: 'http://localhost:4000/api',
   timeout: 10000,
 });
 
