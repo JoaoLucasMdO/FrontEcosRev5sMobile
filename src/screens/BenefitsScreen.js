@@ -106,9 +106,10 @@ const BenefitsScreen = () => {
       const response = await api.post(
         `/hist/transacoes`,
         {
-          idUser: await AsyncStorage.getItem('user'),
-          points: selectedBenefit.pontos,
-          description: selectedBenefit.nome
+          idUsuario: await AsyncStorage.getItem('user'),
+          idBeneficio: selectedBenefit.id,
+          pontos: selectedBenefit.pontos,
+          descricao: selectedBenefit.nome
         },
         {
           headers: {
@@ -146,7 +147,7 @@ const BenefitsScreen = () => {
       await api.put(
         `/beneficio/resgate`,
         {
-          _id: selectedBenefit._id,
+          id: selectedBenefit.id,
           quantidade: newQuantity
         },
         { headers: { "access-token": token } }
