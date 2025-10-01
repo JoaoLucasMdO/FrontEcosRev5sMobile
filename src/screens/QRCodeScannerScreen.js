@@ -1,4 +1,3 @@
-//src\screens\QRCodeScannerScreen.js
 import React, { useState, useEffect, useRef } from 'react';
 import { Text, View, StyleSheet, Button } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
@@ -57,8 +56,8 @@ export default function QRCodeScanner() {
         headers: { "access-token": token }
       });
 
-      if (response.data && response.data.length > 0) {
-        return response.data[0].pontos;
+      if (response.data) {
+        return response.data.pontos;
       }
     } catch (error) {
       console.error("Error fetching user points:", error);
@@ -80,8 +79,8 @@ export default function QRCodeScanner() {
     );
 
     await api.post(`/hist/pontos`, {
-        idUser: await AsyncStorage.getItem('user'),
-        points: pontos,
+        idUsuario: await AsyncStorage.getItem('user'),
+        pontos: pontos,
         id: hash
     })
       .then(response => {
