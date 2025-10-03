@@ -82,7 +82,7 @@ export default function ProfileScreen() {
 
       setUserData(prevData => ({
         ...prevData,
-        _id: user._id,
+        _id: user.id,
         nome: user.nome,
         email: user.email,
         profileImage: 'https://randomuser.me/api/portraits/lego/1.jpg',
@@ -198,6 +198,7 @@ export default function ProfileScreen() {
           if (!token) return;
 
           // Obtem o ID do usuário do token
+          console.log(userData)
           const userId = userData._id;
 
           // Faz a requisição DELETE para apagar a conta

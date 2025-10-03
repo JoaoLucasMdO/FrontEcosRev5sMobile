@@ -218,7 +218,7 @@ const BenefitsScreen = () => {
         {benefits.length > 0 ? (
           benefits.map((benefit) => (
             <TouchableOpacity
-              key={benefit._id}
+              key={benefit.id}
               style={[styles.benefitCard, { backgroundColor: theme.colors.surface }]}
               onPress={() => handleRedeemBenefit(benefit)}
             >

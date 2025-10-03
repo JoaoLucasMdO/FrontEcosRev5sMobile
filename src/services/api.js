@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'https://time-pointer-game-rebel.trycloudflare.com/api',
+  baseURL: 'https://length-households-adaptive-silence.trycloudflare.com/api',
   timeout: 10000,
 });
 
