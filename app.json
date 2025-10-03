@@ -17,9 +17,7 @@
       "supportsTablet": true
     },
     "android": {
-      
       "usesCleartextTraffic": true,
-      
       "adaptiveIcon": {
         "backgroundColor": "#ffffff"
       },
@@ -42,7 +40,7 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "1fe31fa5-111b-4650-aaed-a9c048328ef8"
+        "projectId": "4f21a092-78fb-41b0-b9fd-35b3c3b3603c"
       }
     }
   }
