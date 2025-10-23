@@ -1,5 +1,5 @@
 # 
-<img src="./assets/banner.jpeg" alt="Banner para Site Sua Nova Sombra Roxo e Azul Moderno Delicado" style="border-radius: 200px; width: 100%; height: auto;">
+<img src="./assets/ecosrev_banner.png" alt="Banner do Projeto EcosRev temporario " style="border-radius: 200px; width: 100%; height: auto;">
 
 ## Índice
 - [Sobre o Projeto](#-ecosrev--seu-app-para-descarte-consciente-de-resíduos-eletrônicos)
@@ -64,7 +64,6 @@ O aplicativo foi desenvolvido como parte do projeto da disciplina de Laboratóri
 
 ### 🗄️ Banco de Dados
 ![mysql2](https://img.shields.io/badge/mysql2-%23007FFF?style=flat&logo=mysql&logoColor=white) 
-![mongodb](https://img.shields.io/badge/mongodb-%2347A248?style=flat&logo=mongodb&logoColor=white)
 
 ### 💌 Email
 ![nodemailer](https://img.shields.io/badge/nodemailer-%23000000?style=flat)
@@ -83,6 +82,25 @@ O aplicativo foi desenvolvido como parte do projeto da disciplina de Laboratóri
 ### 🚀 Desenvolvimento
 ![nodemon](https://img.shields.io/badge/nodemon-%2300C600?style=flat&logo=nodemon&logoColor=white)
 ![Concurrently](https://img.shields.io/badge/Concurrently-%23000000?style=flat) 
+---
+
+## Como iniciar este projeto em modo de desenvolvimento
+
+1. Certifique-se de ter o Node.js instalado.
+2. Instale as dependências do projeto:
+	```bash
+	npm install
+	```
+3. Instale o Expo CLI globalmente (se ainda não tiver):
+	```bash
+	npm install -g expo-cli
+	```
+4. Inicie o projeto:
+	```bash
+	npx expo start
+	```
+5. Use o app Expo Go no seu celular para escanear o QR code exibido no terminal ou na página web.
+
 ---
 
 ## 📜 Requisitos Funcionais

@@ -26,10 +26,11 @@ const AuthForm = ({ initialValues, validationSchema, onSubmit, fields, isPasswor
   return (
     <Formik
       initialValues={initialValues}
+      enableReinitialize={true}
       validationSchema={validationSchema}
       onSubmit={onSubmit}
     >
-      {({ handleChange, handleSubmit, values, errors, touched }) => (
+      {({ handleChange, handleSubmit, values, errors, touched, setFieldValue, setFieldTouched }) => (
         <View>
           {fields.map((field) => (
             <View key={field.name} style={styles.inputContainer}>
@@ -85,7 +86,7 @@ const AuthForm = ({ initialValues, validationSchema, onSubmit, fields, isPasswor
               )}
             </View>
           ))}
-          {typeof children === 'function' ? children({ handleSubmit }) : children}
+          {typeof children === 'function' ? children({ handleSubmit, values, setFieldValue, setFieldTouched }) : children}
         </View>
       )}
     </Formik>
@@ -94,10 +95,10 @@ const AuthForm = ({ initialValues, validationSchema, onSubmit, fields, isPasswor
 
 const styles = StyleSheet.create({
   inputContainer: {
-    marginBottom: 10,
+    marginBottom: 6,
   },
   label: {
-    marginBottom: 5,
+    marginBottom: 4,
     fontWeight: '500',
     textAlign: 'left',
   }

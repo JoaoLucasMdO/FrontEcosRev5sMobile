@@ -50,7 +50,7 @@ export default function LoginScreen() {
             const userInfoResponse = await api.get('/usuario/me', {
                 headers: { 'access-token': access_token }
             });
-            await AsyncStorage.setItem('user', String(userInfoResponse.data.id));
+            await AsyncStorage.setItem('user', userInfoResponse.data._id)
             
             // Se o usuário tem uma senha temporária (token de redefinição), redirecionar para a tela de redefinição de senha
             if (userInfoResponse.data.resetPasswordToken) {
@@ -181,14 +181,16 @@ export default function LoginScreen() {
                     onRequestClose={() => setIsRegisterModalVisible(false)}
                 >
                     <View style={styles.modalOverlay}>
-                        <View style={[styles.modalContent, { backgroundColor: theme.colors.background }]}>
-                            <View style={styles.modalHeader}>
-                                <TouchableOpacity onPress={() => setIsRegisterModalVisible(false)}>
-                                    <Text style={{ color: theme.colors.primary, fontSize: fontSize.md }}>✕</Text>
-                                </TouchableOpacity>
-                            </View>
-                            <RegisterForm onClose={() => setIsRegisterModalVisible(false)} />
-                        </View>
+                                <View style={[styles.modalContent, { backgroundColor: theme.colors.background, width: '90%', maxWidth: 480, padding: 12, elevation: 0, shadowOpacity: 0 }]}> 
+                                    <View style={styles.modalHeader}>
+                                        <TouchableOpacity onPress={() => setIsRegisterModalVisible(false)}>
+                                            <Text style={{ color: theme.colors.primary, fontSize: fontSize.md }}>✕</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                    <View style={{ maxHeight: '75%' }}>
+                                      <RegisterForm onClose={() => setIsRegisterModalVisible(false)} />
+                                    </View>
+                                </View>
                     </View>
                 </Modal>
 
@@ -200,13 +202,15 @@ export default function LoginScreen() {
                     onRequestClose={() => setIsForgotPasswordModalVisible(false)}
                 >
                     <View style={styles.modalOverlay}>
-                        <View style={[styles.modalContent, { backgroundColor: theme.colors.background }]}>
+                        <View style={[styles.modalContent, { backgroundColor: theme.colors.background, width: '90%', maxWidth: 480, padding: 18 }]}> 
                             <View style={styles.modalHeader}>
                                 <TouchableOpacity onPress={() => setIsForgotPasswordModalVisible(false)}>
                                     <Text style={{ color: theme.colors.primary, fontSize: fontSize.md }}>✕</Text>
                                 </TouchableOpacity>
                             </View>
-                            <ForgotPasswordForm onClose={() => setIsForgotPasswordModalVisible(false)} />
+                            <View style={{ maxHeight: '80%' }}>
+                              <ForgotPasswordForm onClose={() => setIsForgotPasswordModalVisible(false)} />
+                            </View>
                         </View>
                     </View>
                 </Modal>

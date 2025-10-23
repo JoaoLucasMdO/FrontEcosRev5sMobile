@@ -6,6 +6,8 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import { useTheme } from "../contexts/ThemeContext";
 import { useFontSettings } from "../contexts/FontContext";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Linking } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const ConfigScreen = () => {
   const { colors, themeMode, updateThemeMode, spacing } = useTheme();
@@ -51,7 +53,7 @@ const ConfigScreen = () => {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+  <SafeAreaView edges={['left','right','bottom']} style={[styles.container, { backgroundColor: colors.background }]}> 
       <ScrollView>
         <Text style={[styles.title, { color: colors.primary, fontSize: fontSize.lg }]}>Configurações</Text>
 
@@ -111,6 +113,40 @@ const ConfigScreen = () => {
         <View style={[styles.section, { backgroundColor: colors.surface }]}>
           <Text style={[styles.sectionTitle, { color: colors.text.primary, fontSize: fontSize.md }]}>Versão do App</Text>
           <Text style={[styles.optionText, { color: colors.text.secondary, fontSize: fontSize.sm }]}>{appVersion}</Text>
+        </View>
+
+        {/* Contato / Suporte */}
+        <View style={[styles.section, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text.primary, fontSize: fontSize.md }]}>Contato / Suporte</Text>
+          <TouchableOpacity style={[styles.optionRow, { borderColor: colors.border }]} onPress={async () => {
+            const email = 'ecosrev.suporte@gmail.com';
+            const subject = encodeURIComponent('Contato - Suporte EcosRev');
+            // tentar ler dados do usuário armazenados localmente
+            let userInfo = { nome: '', email: '', id: '' };
+            try {
+              const storedUser = await AsyncStorage.getItem('user');
+              if (storedUser) {
+                const parsed = JSON.parse(storedUser);
+                userInfo.nome = parsed.nome || parsed.name || '';
+                userInfo.email = parsed.email || '';
+                userInfo.id = parsed._id || parsed.id || '';
+              }
+            } catch (err) {
+              console.warn('Não foi possível ler usuário do AsyncStorage:', err);
+            }
+            const bodyText = `Olá, preciso de suporte.\n\nNome: ${userInfo.nome}\nEmail: ${userInfo.email}\nID do usuário: ${userInfo.id}\n\nDescreva seu problema:`;
+            const body = encodeURIComponent(bodyText);
+            const url = `mailto:${email}?subject=${subject}&body=${body}`;
+            try {
+              const can = await Linking.canOpenURL(url);
+              if (can) await Linking.openURL(url);
+            } catch (err) {
+              console.error('Erro ao abrir email:', err);
+            }
+          }}>
+            <Text style={[styles.optionText, { color: colors.text.primary, fontSize: fontSize.sm }]}>Enviar email para suporte</Text>
+            <Ionicons name="mail-outline" size={20} color={colors.primary} />
+          </TouchableOpacity>
         </View>
       </ScrollView>
 

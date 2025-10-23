@@ -125,6 +125,8 @@ export function PublicDrawer() {
       )}
       screenOptions={{ 
         headerShown: false,
+        drawerType: 'front',
+        overlayColor: 'rgba(0,0,0,0.5)',
         drawerActiveTintColor: theme.colors.primary,
         drawerInactiveTintColor: theme.colors.text.primary,
         drawerActiveBackgroundColor: `${theme.colors.primary}20`,
@@ -140,10 +142,19 @@ export function PublicDrawer() {
           width: 280,
           borderRightColor: theme.colors.border,
           borderRightWidth: 1,
+          elevation: 20,
+          zIndex: 9999,
         }
       }}
     >
-      
+      <Drawer.Screen 
+        name="Main" 
+        component={PublicTabScreens} 
+        options={{ 
+          title: "Início", 
+          drawerIcon: ({size}) => <IconButton icon="home" size={size} iconColor="#14AE5C" style={{ margin: 0 }} /> 
+        }} 
+      />
       <Drawer.Screen 
         name="Login" 
         component={LoginScreen} 
@@ -268,11 +279,15 @@ export function AuthenticatedDrawer() {
       drawerContent={(props) => <CustomDrawerContent {...props} />}
       screenOptions={{ 
         headerShown: false,
+        drawerType: 'front',
+        overlayColor: 'rgba(0,0,0,0.5)',
         drawerStyle: {
           backgroundColor: theme.colors.surface,
           width: 280,
           borderRightColor: theme.colors.border,
           borderRightWidth: 1,
+          elevation: 20,
+          zIndex: 9999,
         }
       }}
     >
@@ -306,28 +321,27 @@ export function AuthenticatedDrawer() {
 
 // Navegação principal que controla o fluxo baseado na autenticação
 export function MainNavigation() {
+  // Código que escolhe a árvore de navegação com base na autenticação
   const { isAuthenticated, isLoading } = useAuth();
-  
-  // Mostrar tela de loading enquanto verifica autenticação
+
+  // Enquanto verificamos autenticação, podemos retornar null (ou uma tela de loading)
   if (isLoading) {
-    return null; // Ou uma tela de loading personalizada
+    return null;
   }
-  
+
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       {isAuthenticated ? (
         <>
-          {/* Usuário logado - acesso completo */}
           <Stack.Screen name="AuthenticatedApp" component={AuthenticatedDrawer} />
-          <Stack.Screen 
-            name="ResetPassword" 
-            component={ResetPasswordScreen} 
+          <Stack.Screen
+            name="ResetPassword"
+            component={ResetPasswordScreen}
             options={{ gestureEnabled: false }}
           />
         </>
       ) : (
         <>
-          {/* Usuário não logado - acesso limitado */}
           <Stack.Screen name="PublicApp" component={PublicDrawer} />
           <Stack.Screen name="AuthStack" component={AuthStack} />
         </>
@@ -338,8 +352,13 @@ export function MainNavigation() {
 
 // Manter compatibilidade com código antigo
 export function AppStack() {
+  /*
+  // Código original (protege rotas por autenticação):
   const { isAuthenticated } = useAuth();
   return isAuthenticated ? <AuthenticatedDrawer /> : <PublicDrawer />;
+  */
+  // Durante o desenvolvimento, sempre mostrar as rotas autenticadas
+  return <AuthenticatedDrawer />;
 }
 
 const styles = StyleSheet.create({

@@ -12,7 +12,7 @@ const groupByMonth = (data) => {
   const grouped = {};
 
   data.forEach((item) => {
-    const dateStr = item.data.split(',')[0]; // Pega apenas a data, sem a hora
+    const dateStr = item.date.split(',')[0]; // Pega apenas a data, sem a hora
     const [day, month, year] = dateStr.split('/');
     const key = `${month}/${year}`;
     if (!grouped[key]) {
@@ -33,22 +33,20 @@ const groupByMonth = (data) => {
       title: key,
       total: grouped[key].reduce((acc, item) => {
         // Para transações, considera como débito (negativo)
-        const pointsValue = item.tipo === 'transacao' ? -Math.abs(parseInt(item.pontos)) : parseInt(item.pontos);
+        const pointsValue = item.tipo === 'transacao' ? -Math.abs(parseInt(item.points)) : parseInt(item.points);
         return acc + pointsValue;
       }, 0),
       data: grouped[key].sort((a, b) => {
         // Ordenar por data e hora completa (mais recente primeiro)
         const parseDateTime = (dateTimeStr) => {
-          if (!dateTimeStr) return new Date(0); // Evita erro se undefined
           const [datePart, timePart] = dateTimeStr.split(', ');
-          if (!datePart || !timePart) return new Date(0);
           const [day, month, year] = datePart.split('/');
           const [hours, minutes, seconds] = timePart.split(':');
           return new Date(year, month - 1, day, hours, minutes, seconds);
         };
-
-        const dateA = parseDateTime(a.data); // Corrigido de a.date para a.data
-        const dateB = parseDateTime(b.data); // Corrigido de b.date para b.data
+        
+        const dateA = parseDateTime(a.date);
+        const dateB = parseDateTime(b.date);
         return dateB - dateA; // Mais recente primeiro
       }),
     }));
@@ -100,7 +98,7 @@ const HistoryScreen = ({ route }) => {
     
     // Para transações, os pontos são sempre negativos (débito)
     // Para pontos, mantém o valor original (crédito)
-    const pointsValue = isTransaction ? -Math.abs(parseInt(item.pontos)) : parseInt(item.pontos);
+    const pointsValue = isTransaction ? -Math.abs(parseInt(item.points)) : parseInt(item.points);
     const isNegative = pointsValue < 0;
 
     return (
@@ -123,7 +121,7 @@ const HistoryScreen = ({ route }) => {
             numberOfLines={2}
             testID={`transaction-benefit-${item.id}`}
           >
-            {isTransaction ? item.descricao : 'Crédito de Pontos'}
+            {isTransaction ? item.description : 'Crédito de Pontos'}
           </Text>
           <View style={styles.pointsContainer}>
             {isNegative ? (
@@ -156,7 +154,7 @@ const HistoryScreen = ({ route }) => {
             ]}
             testID={`transaction-date-${item.id}`}
           >
-            {item.data.split(',')[0]} {/* Remove a hora, mostra apenas a data */}
+            {item.date.split(',')[0]} {/* Remove a hora, mostra apenas a data */}
           </Text>
         </View>
       </View>

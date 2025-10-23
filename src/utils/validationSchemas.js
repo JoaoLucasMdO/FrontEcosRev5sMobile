@@ -30,6 +30,47 @@ export const registerSchema = Yup.object().shape({
     .matches(/[0-9]/, 'A senha deve conter pelo menos um número')
     .matches(/[!@#$%^&*_]/, 'A senha deve conter pelo menos um caractere especial')
     .required('A Senha é obrigatória'),
+  cpf: noMaliciousContent('CPF')
+    .required('CPF é obrigatório')
+    .test('cpf-format', 'CPF inválido', value => {
+      if (!value) return false;
+      const digits = (value + '').replace(/\D/g, '');
+      return digits.length === 11;
+    }),
+  celular: noMaliciousContent('Celular')
+    .required('Celular é obrigatório')
+    .test('celular-format', 'Celular inválido', value => {
+      if (!value) return false;
+      const digits = (value + '').replace(/\D/g, '');
+      return digits.length >= 10 && digits.length <= 13;
+    }),
+  // Address broken into fields
+  logradouro: noMaliciousContent('Logradouro')
+    .required('Logradouro é obrigatório')
+    .min(3, 'Logradouro muito curto')
+    .max(200, 'Logradouro muito longo'),
+  numero: noMaliciousContent('Número')
+    .nullable()
+    .max(20, 'Número muito longo'),
+  complemento: noMaliciousContent('Complemento')
+    .nullable()
+    .max(100, 'Complemento muito longo'),
+  bairro: noMaliciousContent('Bairro')
+    .nullable()
+    .max(100, 'Bairro muito longo'),
+  cidade: noMaliciousContent('Cidade')
+    .required('Cidade é obrigatória')
+    .max(100, 'Cidade muito longa'),
+  estado: noMaliciousContent('Estado')
+    .required('Estado é obrigatório')
+    .max(50, 'Estado muito longo'),
+  cep: noMaliciousContent('CEP')
+    .required('CEP é obrigatório')
+    .test('cep-format', 'CEP inválido', value => {
+      if (!value) return false;
+      const digits = (value + '').replace(/\D/g, '');
+      return digits.length === 8;
+    }),
 });
 
 // Formulário de login

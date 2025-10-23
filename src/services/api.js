@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'https://pounds-msgid-jazz-inbox.trycloudflare.com/api',
+  baseURL: 'https://established-owns-strengthen-survey.trycloudflare.com/api',
   timeout: 10000,
 });
 

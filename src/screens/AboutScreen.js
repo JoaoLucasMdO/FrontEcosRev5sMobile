@@ -10,7 +10,7 @@ const AboutScreen = () => {
   const { fontSize } = useFontSettings();
 
   return (
-    <SafeAreaView style={[styles.screen, { backgroundColor: theme.colors.background }]}>
+  <SafeAreaView edges={['left','right','bottom']} style={[styles.screen, { backgroundColor: theme.colors.background }]}> 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         {/* Conteúdo principal */}
         <View style={styles.contentContainer}>

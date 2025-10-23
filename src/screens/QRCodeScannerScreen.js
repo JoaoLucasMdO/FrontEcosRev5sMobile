@@ -13,8 +13,6 @@ export default function QRCodeScanner() {
   const [scanned, setScanned] = useState(false);
   const [alertVisible, setAlertVisible] = useState(false);
   const [scannedData, setScannedData] = useState("");
-  const [alertMessage, setAlertMessage] = useState("");
-  const [alertTitle, setAlertTitle] = useState("");
   const [cameraKey, setCameraKey] = useState(0); // Força remontagem da câmera
   const theme = useTheme();
   const { fontSize, fontFamily } = useFontSettings();
@@ -85,54 +83,28 @@ export default function QRCodeScanner() {
   };
 
   const updateUserPoints = async (pontos, hash) => {
-    if (!token) return { success: false, message: 'Token não encontrado' };
+    if (!token) return;
 
-    try {
-      const currentPoints = await fetchUserPoints();
-      const newPoints = currentPoints + pontos;
+    const currentPoints = await fetchUserPoints();
+    const newPoints = currentPoints + pontos;
 
-      await api.put(
-        `/usuario/pontos`,
-        { pontos: newPoints },
-        { headers: { "access-token": token } }
-      );
+    await api.put(
+      `/usuario/pontos`,
+      { pontos: newPoints },
+      { headers: { "access-token": token } }
+    );
 
-      await api.post(`/hist/pontos`, {
+    await api.post(`/hist/pontos`, {
         idUsuario: await AsyncStorage.getItem('user'),
         pontos: pontos,
         id: hash
+    })
+      .then(response => {
+        console.log('Resposta:', response.data);
+      })
+      .catch(error => {
+        console.error('Erro:', error);
       });
-
-      console.log('Pontos atualizados com sucesso');
-      return { success: true, message: 'Pontos adicionados com sucesso' };
-    } catch (error) {
-      console.error('Erro ao atualizar pontos:', error);
-      
-      // Verifica se o erro é de cupom duplicado
-      if (error.response?.status === 400) {
-        const errorData = error.response.data;
-        
-        // Se o backend retornou mensagem específica de cupom duplicado
-        if (errorData.code === 'DUPLICATE_COUPON' || errorData.error?.includes('cupom já foi resgatado')) {
-          return { 
-            success: false, 
-            message: 'Este cupom já foi resgatado anteriormente.' 
-          };
-        }
-        
-        // Outros erros 400
-        return { 
-          success: false, 
-          message: errorData.error || 'Erro ao processar o cupom.' 
-        };
-      }
-      
-      // Erro genérico
-      return { 
-        success: false, 
-        message: 'Não foi possível registrar os pontos. Tente novamente.' 
-      };
-    }
   };
 
   const handleBarCodeScanned = async ({ data }) => {
@@ -147,24 +119,10 @@ export default function QRCodeScanner() {
       console.log(parsedData.hash);
       console.log(parsedData.pontos);
 
-      // Aguarda o resultado da atualização
-      const result = await updateUserPoints(parsedData.pontos, parsedData.hash);
-      
-      if (result.success) {
-        setAlertTitle("QR Code Escaneado");
-        setAlertMessage(`Você recebeu ${parsedData.pontos} pontos!`);
-      } else {
-        setAlertTitle("Erro");
-        setAlertMessage(result.message);
-      }
-      
+      await updateUserPoints(parsedData.pontos, parsedData.hash);
       setAlertVisible(true);
     } catch (error) {
       console.error("Erro ao processar QR Code:", error);
-      setAlertTitle("Erro");
-      setAlertMessage("QR Code inválido ou erro ao processar.");
-      setScanned(true);
-      setAlertVisible(true);
     }
   };
 
@@ -194,8 +152,8 @@ export default function QRCodeScanner() {
 
       <CustomAlert
         visible={alertVisible}
-        title={alertTitle}
-        message={alertMessage}
+        title="QR Code Escaneado"
+        message={`Você recebeu ${scannedData.pontos} pontos!`}
         onClose={handleCloseAlert}
         onConfirm={() => {
           setAlertVisible(false);

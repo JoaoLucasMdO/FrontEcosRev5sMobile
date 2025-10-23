@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, TextInput } from "react-native";
 import { IconButton } from "react-native-paper";
 import { useTheme } from "../contexts/ThemeContext";
 import { useFontSettings } from "../contexts/FontContext";
@@ -14,6 +14,8 @@ import api from "../services/api";
 const BenefitsScreen = () => {
   const [userPoints, setUserPoints] = useState(0);
   const [benefits, setBenefits] = useState([]);
+  const [filteredBenefits, setFilteredBenefits] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [alertVisible, setAlertVisible] = useState(false);
   const [selectedBenefit, setSelectedBenefit] = useState(null);
   const [isError, setIsError] = useState(false);
@@ -21,11 +23,16 @@ const BenefitsScreen = () => {
   const theme = useTheme();
   const { fontSize } = useFontSettings();
   const route = useRoute();
+  
   useEffect(() => {
     if (route.params?.refresh) {
       fetchUserPoints();
     }
   }, [route.params?.refresh]);
+
+  useEffect(() => {
+    filterBenefits();
+  }, [searchQuery, benefits]);
 
   const getToken = async () => {
     try {
@@ -46,8 +53,8 @@ const BenefitsScreen = () => {
         headers: { "access-token": token }
       });
 
-      if (response.data) {
-        setUserPoints(response.data.pontos);
+      if (response.data && response.data.length > 0) {
+        setUserPoints(response.data[0].pontos);
       }
     } catch (error) {
       console.error("Error fetching user points:", error);
@@ -63,13 +70,23 @@ const BenefitsScreen = () => {
         headers: { "access-token": token }
       });
 
-      // Filter benefits to only show those with quantity > 0
       const availableBenefits = response.data.filter(benefit => benefit.quantidade > 0);
       setBenefits(availableBenefits);
     } catch (error) {
       console.error("Error fetching benefits:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const filterBenefits = () => {
+    if (searchQuery.trim() === "") {
+      setFilteredBenefits(benefits);
+    } else {
+      const filtered = benefits.filter(benefit =>
+        benefit.nome.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredBenefits(filtered);
     }
   };
 
@@ -82,7 +99,6 @@ const BenefitsScreen = () => {
       loadData();
     }, [])
   );
-
 
   const handleRedeemBenefit = (benefit) => {
     if (userPoints >= benefit.pontos) {
@@ -101,15 +117,13 @@ const BenefitsScreen = () => {
 
   const confirmRedeem = async () => {
     console.log(selectedBenefit)
-    // If it's just an informational alert (error or success), simply close it
     try {
       const response = await api.post(
         `/hist/transacoes`,
         {
-          idUsuario: await AsyncStorage.getItem('user'),
-          idBeneficio: selectedBenefit.id,
-          pontos: selectedBenefit.pontos,
-          descricao: selectedBenefit.nome
+          idUser: await AsyncStorage.getItem('user'),
+          points: selectedBenefit.pontos,
+          description: selectedBenefit.nome
         },
         {
           headers: {
@@ -134,7 +148,6 @@ const BenefitsScreen = () => {
         return;
       }
 
-      // 1. Update user points (subtract benefit points)
       const newPoints = userPoints - selectedBenefit.pontos;
       await api.put(
         `/usuario/pontos`,
@@ -142,27 +155,20 @@ const BenefitsScreen = () => {
         { headers: { "access-token": token } }
       );
 
-      // 2. Update benefit quantity (decrement by 1)
       const newQuantity = selectedBenefit.quantidade - 1;
       await api.put(
         `/beneficio/resgate`,
         {
-          id: selectedBenefit.id,
+          _id: selectedBenefit.id,
           quantidade: newQuantity
         },
         { headers: { "access-token": token } }
       );
 
-      // 3. Update local state
       setUserPoints(newPoints);
-
-      // 4. Refresh benefits list
       await fetchBenefits();
-
-      // 5. Close the current alert
       setAlertVisible(false);
 
-      // 6. Show success message after a short delay
       setTimeout(() => {
         setSelectedBenefit({
           nome: "Resgate Concluído",
@@ -184,7 +190,6 @@ const BenefitsScreen = () => {
     }
   };
 
-  // Texto personalizado para o alerta
   const getAlertMessage = () => {
     if (isError) {
       return selectedBenefit?.endereco;
@@ -197,7 +202,7 @@ const BenefitsScreen = () => {
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background, justifyContent: 'center', alignItems: 'center' }]}>
+      <SafeAreaView edges={['left','right','bottom']} style={[styles.container, { backgroundColor: theme.colors.background, justifyContent: 'center', alignItems: 'center' }]}> 
         <ActivityIndicator size="large" color={theme.colors.primary} />
         <Text style={{ marginTop: 10, color: theme.colors.text.primary }}>Carregando...</Text>
       </SafeAreaView>
@@ -214,9 +219,29 @@ const BenefitsScreen = () => {
         </View>
       </View>
 
+      <View style={[styles.searchContainer, { backgroundColor: theme.colors.surface, marginHorizontal: 15, marginTop: 10 }]}>
+        <IconButton icon="magnify" size={20} iconColor={theme.colors.text.secondary} style={{ margin: 0 }} />
+        <TextInput
+          style={[styles.searchInput, { color: theme.colors.text.primary, fontSize: fontSize.md }]}
+          placeholder="Buscar benefício..."
+          placeholderTextColor={theme.colors.text.secondary}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+        {searchQuery.length > 0 && (
+          <IconButton 
+            icon="close" 
+            size={20} 
+            iconColor={theme.colors.text.secondary} 
+            style={{ margin: 0 }} 
+            onPress={() => setSearchQuery("")}
+          />
+        )}
+      </View>
+
       <ScrollView contentContainerStyle={[styles.scrollViewContent, { marginTop: 10 }]} showsVerticalScrollIndicator={false}>
-        {benefits.length > 0 ? (
-          benefits.map((benefit) => (
+        {filteredBenefits.length > 0 ? (
+          filteredBenefits.map((benefit) => (
             <TouchableOpacity
               key={benefit.id}
               style={[styles.benefitCard, { backgroundColor: theme.colors.surface }]}
@@ -242,7 +267,9 @@ const BenefitsScreen = () => {
         ) : (
           <View style={styles.emptyContainer}>
             <Text style={[styles.emptyText, { color: theme.colors.text.secondary }]}>
-              Não há benefícios disponíveis no momento.
+              {searchQuery.trim() !== "" 
+                ? "Nenhum benefício encontrado com esse nome."
+                : "Não há benefícios disponíveis no momento."}
             </Text>
           </View>
         )}
@@ -273,7 +300,6 @@ const BenefitsScreen = () => {
           !(isError || selectedBenefit?.nome === "Resgate Concluído")
         }
       />
-
     </SafeAreaView>
   );
 };
@@ -283,6 +309,18 @@ const styles = StyleSheet.create({
   headerContainer: { paddingVertical: 15, paddingHorizontal: 20 },
   pointsHeader: { flexDirection: "row", alignItems: "center", justifyContent: "center" },
   pointsText: { marginLeft: 10, fontWeight: "bold" },
+  searchContainer: { 
+    flexDirection: "row", 
+    alignItems: "center", 
+    borderRadius: 10, 
+    paddingHorizontal: 10,
+    paddingVertical: 5
+  },
+  searchInput: { 
+    flex: 1, 
+    paddingVertical: 8,
+    paddingHorizontal: 5
+  },
   scrollViewContent: { paddingVertical: 20, paddingHorizontal: 15 },
   benefitCard: { borderRadius: 10, marginBottom: 15, flexDirection: "row", alignItems: "center", padding: 15 },
   benefitDetails: { flex: 1 },
