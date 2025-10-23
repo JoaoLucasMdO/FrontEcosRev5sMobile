@@ -64,7 +64,6 @@ O aplicativo foi desenvolvido como parte do projeto da disciplina de Laboratóri
 
 ### 🗄️ Banco de Dados
 ![mysql2](https://img.shields.io/badge/mysql2-%23007FFF?style=flat&logo=mysql&logoColor=white) 
-![mysql2](https://img.shields.io/badge/mysql2-%23007FFF?style=flat&logo=mysql&logoColor=white)
 
 ### 💌 Email
 ![nodemailer](https://img.shields.io/badge/nodemailer-%23000000?style=flat)
