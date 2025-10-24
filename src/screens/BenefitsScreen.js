@@ -53,8 +53,8 @@ const BenefitsScreen = () => {
         headers: { "access-token": token }
       });
 
-      if (response.data && response.data.length > 0) {
-        setUserPoints(response.data[0].pontos);
+      if (response.data && response.data.pontos !== undefined) {
+        setUserPoints(response.data.pontos);
       }
     } catch (error) {
       console.error("Error fetching user points:", error);
@@ -121,9 +121,10 @@ const BenefitsScreen = () => {
       const response = await api.post(
         `/hist/transacoes`,
         {
-          idUser: await AsyncStorage.getItem('user'),
-          points: selectedBenefit.pontos,
-          description: selectedBenefit.nome
+          idUsuario: await AsyncStorage.getItem('user'),
+          pontos: selectedBenefit.pontos,
+          descricao: selectedBenefit.nome,
+          idBeneficio: selectedBenefit.id
         },
         {
           headers: {
@@ -159,7 +160,7 @@ const BenefitsScreen = () => {
       await api.put(
         `/beneficio/resgate`,
         {
-          _id: selectedBenefit.id,
+          id: selectedBenefit.id,
           quantidade: newQuantity
         },
         { headers: { "access-token": token } }

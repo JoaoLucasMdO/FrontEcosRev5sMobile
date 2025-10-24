@@ -50,7 +50,7 @@ export default function LoginScreen() {
             const userInfoResponse = await api.get('/usuario/me', {
                 headers: { 'access-token': access_token }
             });
-            await AsyncStorage.setItem('user', userInfoResponse.data._id)
+            await AsyncStorage.setItem('user', String(userInfoResponse.data.id));
             
             // Se o usuário tem uma senha temporária (token de redefinição), redirecionar para a tela de redefinição de senha
             if (userInfoResponse.data.resetPasswordToken) {

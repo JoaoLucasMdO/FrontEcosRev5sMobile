@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image, ScrollView, Modal, Alert, Animated, Linking } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image, ScrollView, Modal, Alert, Animated, Linking, Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../contexts/ThemeContext';
@@ -320,95 +320,131 @@ export default function ProfileScreen() {
     }
   }, [editModal.visible]);
 
-  const pickImage = async () => {
-    try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        showAlert({ title: 'Permissão', message: 'Permissão para acessar fotos negada.', confirmColor: theme.colors.error, showCancelButton: false });
-        return;
-      }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
+ const pickImage = async () => {
+  try {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      showAlert({ 
+        title: 'Permissão', 
+        message: 'Permissão para acessar fotos negada.', 
+        confirmColor: theme.colors.error, 
+        showCancelButton: false 
       });
-
-      // compatibilidade com novas versões do expo-image-picker (assets array)
-      const uri = result.assets && result.assets[0] ? result.assets[0].uri : result.uri;
-      if (!result.canceled && uri) {
-        // atualiza localmente
-        setUserData(prev => ({ ...prev, profileImage: uri }));
-        // salvar localmente no AsyncStorage enquanto não há backend persistente
-        try {
-          await AsyncStorage.setItem('profileImage', uri);
-          // confirmar que foi gravado
-          const verify = await AsyncStorage.getItem('profileImage');
-          if (verify !== uri) {
-            console.warn('profileImage gravado, mas leitura retornou diferente:', verify);
-            showAlert({ title: 'Aviso', message: 'Não foi possível confirmar salvamento local da imagem.', confirmColor: theme.colors.warning, showCancelButton: false });
-          }
-        } catch (err) {
-          console.error('Erro ao salvar imagem no AsyncStorage:', err);
-          showAlert({ title: 'Erro', message: 'Não foi possível salvar a imagem localmente.', confirmColor: theme.colors.error, showCancelButton: false });
-          return;
-        }
-        // tenta enviar para backend (multipart/form-data) - preferível para arquivos
-        try {
-          const token = await AsyncStorage.getItem('token');
-          if (token) {
-            const userId = userData._id;
-            const url = userId ? `/usuario/${userId}` : `/usuario/me`;
-            const formData = new FormData();
-            formData.append('profileImage', { uri, name: 'profile.jpg', type: 'image/jpeg' });
-            await api.put(url, formData, { headers: { 'Content-Type': 'multipart/form-data', 'access-token': token } });
-            showAlert({ title: 'Sucesso', message: 'Foto atualizada e enviada ao servidor.', confirmColor: theme.colors.success, showCancelButton: false });
-          } else {
-            showAlert({ title: 'Sucesso', message: 'Foto salva localmente. Faça login para sincronizar com o servidor mais tarde.', confirmColor: theme.colors.info, showCancelButton: false });
-          }
-        } catch (err) {
-          console.error('Erro ao enviar foto para backend (multipart):', err);
-          // fallback para enviar apenas URI no body
-          try {
-            const token = await AsyncStorage.getItem('token');
-            if (token) {
-              const userId = userData._id;
-              const url = userId ? `/usuario/${userId}` : `/usuario/me`;
-              await api.put(url, { profileImage: uri }, { headers: { 'access-token': token } });
-              showAlert({ title: 'Sucesso', message: 'Foto atualizada (URI enviada).', confirmColor: theme.colors.success, showCancelButton: false });
-            }
-          } catch (err2) {
-            console.error('Fallback envio URI erro:', err2);
-            // Se chegou aqui, a imagem já foi salva localmente (verificação feita), então apenas avisa que a sincronização falhou
-            showAlert({ title: 'Aviso', message: 'Foto salva localmente, mas não foi possível enviar ao servidor.', confirmColor: theme.colors.warning, showCancelButton: false });
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Erro ao selecionar imagem:', error);
-      showAlert({ title: 'Erro', message: 'Não foi possível selecionar a imagem.', confirmColor: theme.colors.error, showCancelButton: false });
-    }
-  };
-
-  // Consulta ViaCEP (API pública) para autocompletar endereço por CEP
-  const fetchAddressByCEP = async (cep) => {
-    const clean = (cep || '').replace(/\D/g, '');
-    if (clean.length !== 8) {
-      showAlert({ title: 'CEP inválido', message: 'Informe um CEP com 8 dígitos para buscar.', confirmColor: theme.colors.error, showCancelButton: false });
       return;
     }
-    try {
-      const resp = await fetch(`https://viacep.com.br/ws/${clean}/json/`);
-      const j = await resp.json();
-      if (j.erro) throw new Error('CEP não encontrado');
-      setAddressForm(prev => ({ ...prev, logradouro: j.logradouro || '', bairro: j.bairro || '', cidade: j.localidade || '', estado: j.uf || '' }));
-      showAlert({ title: 'OK', message: 'Endereço preenchido a partir do CEP.', confirmColor: theme.colors.success, showCancelButton: false });
-    } catch (error) {
-      console.error('ViaCEP erro', error);
-      showAlert({ title: 'Erro', message: 'Não foi possível buscar o CEP.', confirmColor: theme.colors.error, showCancelButton: false });
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    // Compatibilidade com novas versões do expo-image-picker (assets array)
+    const uri = result.assets && result.assets[0] ? result.assets[0].uri : result.uri;
+    
+    if (!result.canceled && uri) {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        if (!token) {
+          showAlert({ 
+            title: 'Erro', 
+            message: 'Você precisa estar logado para atualizar a foto de perfil.', 
+            confirmColor: theme.colors.error, 
+            showCancelButton: false 
+          });
+          return;
+        }
+
+        // Criar um objeto FormData para enviar a imagem
+        const formData = new FormData();
+
+        // Criar objeto que representa o arquivo
+        const uriParts = uri.split('.');
+        const fileType = uriParts[uriParts.length - 1];
+        
+        const file = {
+          uri: Platform.OS === 'android' ? uri : uri.replace('file://', ''),
+          type: `image/${fileType}`,
+          name: `profile-${Date.now()}.${fileType}`,
+        };
+
+        // Append da imagem com o nome do campo correto: 'image'
+        formData.append('image', file);
+
+        console.log('Enviando arquivo:', file);
+
+        // Enviar a imagem para o servidor
+        const uploadResponse = await api.post('/upload/image', formData, {
+          headers: {
+            'access-token': token,
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+
+        console.log('Resposta do upload:', uploadResponse.data);
+
+        // Se o upload for bem-sucedido, atualiza o estado local
+        if (uploadResponse.data && uploadResponse.data.url) {
+          const imageUrl = uploadResponse.data.url;
+          
+          // Atualiza o estado local
+          setUserData(prev => ({ ...prev, profileImage: imageUrl }));
+          
+          // Salva no AsyncStorage
+          await AsyncStorage.setItem('profileImage', imageUrl);
+          
+          // Atualiza o registro do usuário no backend com a URL da imagem
+          const userId = userData._id;
+          const updateUrl = userId ? `/usuario/${userId}` : `/usuario/me`;
+          
+          try {
+            await api.put(updateUrl, { 
+              profileImage: imageUrl 
+            }, { 
+              headers: { 'access-token': token } 
+            });
+          } catch (updateErr) {
+            console.warn('Erro ao atualizar profileImage no usuário:', updateErr);
+          }
+          
+          showAlert({ 
+            title: 'Sucesso', 
+            message: 'Foto de perfil atualizada com sucesso!', 
+            confirmColor: theme.colors.success || theme.colors.primary, 
+            showCancelButton: false 
+          });
+        } else {
+          console.warn('Upload concluído mas resposta inesperada:', uploadResponse.data);
+          showAlert({ 
+            title: 'Aviso', 
+            message: 'Upload concluído, mas não foi possível obter a URL da imagem.', 
+            confirmColor: theme.colors.warning, 
+            showCancelButton: false 
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao fazer upload da imagem:', error);
+        console.error('Detalhes do erro:', error.response?.data);
+        
+        showAlert({ 
+          title: 'Erro', 
+          message: `Não foi possível fazer o upload da imagem. ${error.response?.data?.error || error.message}`, 
+          confirmColor: theme.colors.error, 
+          showCancelButton: false 
+        });
+      }
     }
-  };
+  } catch (error) {
+    console.error('Erro ao selecionar imagem:', error);
+    showAlert({ 
+      title: 'Erro', 
+      message: 'Não foi possível selecionar a imagem.', 
+      confirmColor: theme.colors.error, 
+      showCancelButton: false 
+    });
+  }
+};
 
   const closeEditModal = () => setEditModal({ visible: false, field: '', value: '' });
 
