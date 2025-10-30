@@ -23,6 +23,19 @@ const AuthForm = ({ initialValues, validationSchema, onSubmit, fields, isPasswor
     }
   };
 
+  const maskCPF = (value = '') => {
+    const digits = (value + '').replace(/\D/g, '').slice(0,11);
+    return digits
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+  };
+
+  const maskCEP = (value = '') => {
+    const digits = (value + '').replace(/\D/g, '').slice(0,8);
+    return digits.replace(/(\d{5})(\d{1,3})/, '$1-$2');
+  };
+
   return (
     <Formik
       initialValues={initialValues}
@@ -39,7 +52,15 @@ const AuthForm = ({ initialValues, validationSchema, onSubmit, fields, isPasswor
               </Text>
               <TextInput
                 value={values[field.name]}
-                onChangeText={handleChange(field.name)}
+                onChangeText={
+                  field.onChange
+                    ? (text) => field.onChange(text, setFieldValue)
+                    : field.mask === 'cpf'
+                    ? (text) => setFieldValue(field.name, maskCPF(text))
+                    : field.mask === 'cep'
+                    ? (text) => setFieldValue(field.name, maskCEP(text))
+                    : handleChange(field.name)
+                }
                 style={{ 
                   backgroundColor: theme.colors.surface, 
                   marginBottom: 8,
@@ -53,6 +74,7 @@ const AuthForm = ({ initialValues, validationSchema, onSubmit, fields, isPasswor
                 outlineColor={theme.colors.text.disabled}
                 secureTextEntry={field.secureTextEntry && !isPasswordVisible}
                 placeholder={field.placeholder}
+                maxLength={field.maxLength}
                 placeholderTextColor={theme.colors.text.disabled}
                 autoCapitalize={field.autoCapitalize || "none"}
                 keyboardType={field.keyboardType || "default"}

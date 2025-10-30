@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { Alert, ScrollView } from 'react-native';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Checkbox } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../contexts/ThemeContext';
 import { useFontSettings } from '../contexts/FontContext';
@@ -18,21 +17,29 @@ export default function RegisterForm({ onClose }) {
 
   const handleRegister = async (values) => {
     try {
-      // montar endereco completo a partir dos campos separados
-      const enderecoConstruido = `${values.logradouro || ''}${values.numero ? ', ' + values.numero : ''}${values.complemento ? ' - ' + values.complemento : ''}${values.bairro ? ' - ' + values.bairro : ''}${values.cidade ? ' - ' + values.cidade : ''}${values.estado ? ' - ' + values.estado : ''}${values.cep ? ' - CEP: ' + values.cep : ''}`;
-
-      const response = await api.post('/usuario', {
+      // Monta o payload com os campos que a rota /usuario valida
+      const payload = {
         nome: values.name,
         email: values.email,
         senha: values.password,
-        tipo: "Cliente",
+        tipo: 'Cliente',
         cpf: values.cpf || '',
         celular: values.celular || '',
-        endereco: enderecoConstruido,
-      });
+        // enviar endereço em campos separados para passar nas validações server-side
+        logradouro: values.logradouro || '',
+        numero: values.numero || '',
+        complemento: values.complemento || '',
+        bairro: values.bairro || '',
+        cidade: values.cidade || '',
+        estado: values.estado || '',
+        cep: values.cep || '',
+        ativo: true
+      };
 
-      alert("Cadastro realizado com sucesso!");
-      onClose(); 
+      const response = await api.post('/usuario', payload);
+
+      Alert.alert('Sucesso', 'Cadastro realizado com sucesso!');
+      onClose();
     } catch (error) {
       let msg = '';
       if (error.response) {
@@ -63,55 +70,29 @@ export default function RegisterForm({ onClose }) {
     setShowPassword(!showPassword);
   };
 
-  const [useExampleData, setUseExampleData] = useState(false);
-
-  const exampleValues = {
-    name: 'Maria Exemplo',
-    cpf: '12345678901',
-    celular: '5511999998888',
-    email: 'maria.exemplo@example.com',
-    password: 'Exemplo@123',
-    logradouro: 'Rua das Flores',
-    numero: '100',
-    complemento: '',
-    bairro: 'Centro',
-    cidade: 'São Paulo',
-    estado: 'SP',
-    cep: '01001000'
-  };
 
   const registerFields = [
-    { name: 'name', label: 'Nome Completo' },
-    { name: 'cpf', label: 'CPF', keyboardType: 'numeric' },
-    { name: 'celular', label: 'Celular', keyboardType: 'phone-pad' },
-    { name: 'email', label: 'Email' },
-    { name: 'password', label: 'Senha', secureTextEntry: true },
-    { name: 'logradouro', label: 'Logradouro' },
-    { name: 'numero', label: 'Número', keyboardType: 'numeric' },
-    { name: 'complemento', label: 'Complemento' },
-    { name: 'bairro', label: 'Bairro' },
-    { name: 'cidade', label: 'Cidade' },
-    { name: 'estado', label: 'Estado' },
-    { name: 'cep', label: 'CEP', keyboardType: 'numeric' },
+    { name: 'name', label: 'Nome Completo', placeholder: 'Seu nome completo', autoCapitalize: 'words', maxLength: 100 },
+    { name: 'cpf', label: 'CPF', keyboardType: 'numeric', mask: 'cpf', placeholder: '000.000.000-00', maxLength: 14 },
+    { name: 'celular', label: 'Celular', keyboardType: 'phone-pad', placeholder: '+55 (xx) xxxxx-xxxx', maxLength: 15 },
+    { name: 'email', label: 'Email', placeholder: 'seu@exemplo.com', autoCapitalize: 'none', maxLength: 120 },
+    { name: 'password', label: 'Senha', secureTextEntry: true, placeholder: 'Senha (mín. 6 caracteres)', maxLength: 64 },
+    { name: 'logradouro', label: 'Logradouro', placeholder: 'Rua, Avenida, etc.', maxLength: 200 },
+    { name: 'numero', label: 'Número', keyboardType: 'numeric', placeholder: 'Número', maxLength: 10 },
+    { name: 'complemento', label: 'Complemento', placeholder: 'Apartamento, bloco, etc.', maxLength: 50 },
+    { name: 'bairro', label: 'Bairro', placeholder: 'Bairro', maxLength: 80 },
+    { name: 'cidade', label: 'Cidade', placeholder: 'Cidade', maxLength: 100 },
+    { name: 'estado', label: 'Estado', placeholder: 'SP', maxLength: 2, autoCapitalize: 'characters' },
+    { name: 'cep', label: 'CEP', keyboardType: 'numeric', mask: 'cep', placeholder: '00000-000', maxLength: 9 },
   ];
 
   return (
     <ScrollView contentContainerStyle={{ paddingBottom: 8 }}>
       <Text style={[styles.title, { color: theme.colors.primary, fontSize: fontSize.xl }]}>Cadastro</Text>
 
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-        <Checkbox
-          status={useExampleData ? 'checked' : 'unchecked'}
-          onPress={() => setUseExampleData(!useExampleData)}
-          color={theme.colors.primary}
-        />
-        <TouchableOpacity onPress={() => setUseExampleData(!useExampleData)}>
-          <Text style={{ color: theme.colors.text.primary }}>{useExampleData ? 'Usando dados de exemplo' : 'Mostrar dados de exemplo'}</Text>
-        </TouchableOpacity>
-      </View>
 
       <AuthForm
-        initialValues={useExampleData ? exampleValues : { name: '', cpf: '', celular: '', email: '', password: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', estado: '', cep: '' }}
+  initialValues={{ name: '', cpf: '', celular: '', email: '', password: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', estado: '', cep: '' }}
         validationSchema={registerSchema}
         onSubmit={handleRegister}
         fields={registerFields}
@@ -165,7 +146,7 @@ export default function RegisterForm({ onClose }) {
         <Text style={[styles.linkText, { color: theme.colors.primary, fontSize: fontSize.sm }]}>Já tem uma conta? Faça login</Text>
       </TouchableOpacity>
 
-      {/* Removi o botão de voltar para Home, pois agora está dentro do modal de login */}
+
     </ScrollView>
   );
 }

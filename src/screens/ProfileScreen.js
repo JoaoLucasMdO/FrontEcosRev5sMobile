@@ -19,8 +19,6 @@ export default function ProfileScreen() {
   const navigation = useNavigation();
    const { logout } = useAuth();
   const theme = useTheme();
-  // Toggle rápido para forçar dados mock durante desenvolvimento
-  const USE_MOCKS = false; // setar true para forçar mocks locais
   const { fontSize } = useFontSettings(); const [userData, setUserData] = useState({
     _id: '',
     nome: '',
@@ -70,103 +68,121 @@ export default function ProfileScreen() {
       if (response.data && response.data.pontos !== undefined) {
         setUserData(prevData => ({
           ...prevData,
-          pontos: response.data[0].pontos
+          pontos: response.data.pontos
         }));
       }
     } catch (error) {
       console.error("Erro ao buscar pontos do usuário:", error);
     }
   };
+
+
   const fetchUserData = async () => {
     setIsLoading(true);
     try {
       const token = await AsyncStorage.getItem('token');
-      if (USE_MOCKS || !token) {
-        // usar dados mock quando não há token ou quando for forçado
-        const mockUser = {
-          _id: 'mock-1',
-          nome: 'Maria Silva',
-          email: 'maria.silva@example.com',
-          cpf: '12345678901',
-          celular: '5511999998888',
-          endereco: 'Rua Exemplo, 123 - Centro - São Paulo - SP - CEP: 01001-000',
-          profileImage: 'https://randomuser.me/api/portraits/women/44.jpg',
-          pontos: 42,
-          bio: 'Sou uma usuária de exemplo para verificar o layout do perfil.'
-        };
-        setUserData(prev => ({ ...prev, ...mockUser }));
-      } else {
-        const response = await api.get(`/usuario/me`, {
-          headers: {
-            'Content-Type': 'application/json',
-            'access-token': token
-          },
-        });
-
-        const data = response.data;
-        const user = Array.isArray(data.results) ? data.results[0] : data; // adapte se a estrutura do retorno for diferente
-
-        setUserData(prevData => ({
-          ...prevData,
-          _id: user._id,
-          nome: user.nome || user.fullName || '',
-          email: user.email || '',
-          cpf: user.cpf || '',
-          celular: user.celular || user.telefone || '',
-          endereco: user.endereco || user.localizacao || '',
-          profileImage: user.profileImage || 'https://randomuser.me/api/portraits/lego/1.jpg',
-        }));
-      }
-      // Prioriza imagem salva localmente enquanto não há BD
-      try {
-        const stored = await AsyncStorage.getItem('profileImage');
-        if (stored) setUserData(prev => ({ ...prev, profileImage: stored }));
-      } catch (err) {
-        console.error('Erro ao ler profileImage do AsyncStorage:', err);
-      }
-    } catch (error) {
-      console.error('Erro ao obter os dados do usuário:', error);
-      // Caso de erro: se estivermos em dev, usar mock como fallback; senão exibir alerta
-      if (USE_MOCKS) {
-        const mockUser = {
-          _id: 'mock-err',
-          nome: 'Usuário Exemplo',
-          email: 'exemplo@local',
-          cpf: '00000000000',
-          celular: '5511999999999',
-          endereco: 'Av. Mock, 0 - Centro - Cidade - UF - CEP: 00000-000',
-          profileImage: 'https://randomuser.me/api/portraits/lego/1.jpg',
+      if (!token) {
+        // sem token: usuário não autenticado — limpa estado e informa ao usuário
+        setUserData({
+          _id: '',
+          nome: '',
+          email: '',
+          cpf: '',
+          celular: '',
+          endereco: '',
+          profileImage: '',
           pontos: 0,
           bio: ''
-        };
-        setUserData(mockUser);
-      } else {
-        setUserData({
-          _id: "",
-          nome: "",
-          email: "",
-          profileImage: "",
-          pontos: 0,
         });
+        setIsLoading(false);
         showAlert({
-          title: 'Erro',
-          message: 'Não foi possível carregar os dados do perfil.',
+          title: 'Não autenticado',
+          message: 'Faça login para acessar o perfil.',
           confirmText: 'OK',
-          confirmColor: theme.colors.error,
           showCancelButton: false,
         });
+        return;
       }
+
+      const response = await api.get(`/usuario/me`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'access-token': token
+        },
+      });
+
+        const data = response.data;
+          const user = Array.isArray(data.results) ? data.results : data;
+
+          // Monta o endereço completo a partir dos campos separados, se existirem
+          const formatFullAddress = (u) => {
+            if (!u) return '';
+            // se já existe um campo 'endereco' stringify, usa ele
+            if (u.endereco && String(u.endereco).trim() !== '') return String(u.endereco);
+            // caso o backend retorne campos separados, monta uma string legível
+            const logradouro = u.logradouro || '';
+            const numero = u.numero || '';
+            const complemento = u.complemento || '';
+            const bairro = u.bairro || '';
+            const cidade = u.cidade || '';
+            const estado = u.estado || '';
+            const cep = u.cep || '';
+            const parts = [];
+            if (logradouro) parts.push(numero ? `${logradouro}, ${numero}` : logradouro);
+            if (complemento) parts.push(complemento);
+            if (bairro) parts.push(bairro);
+            const cityState = [cidade, estado].filter(Boolean).join(' - ');
+            if (cityState) parts.push(cityState);
+            if (cep) parts.push(`CEP: ${cep}`);
+            const constructed = parts.join(' - ');
+            // se não temos nada montado, pode haver um campo 'localizacao'
+            if (!constructed && u.localizacao) return String(u.localizacao);
+            return constructed;
+          };
+
+          const fullAddress = formatFullAddress(user);
+
+          let profileImageUrl = user.profileImage || 'https://randomuser.me/api/portraits/lego/1.jpg';
+          try {
+            const userId = user.id;
+            if (userId && token) {
+              const avatarResp = await api.get(`/usuario/avatar/${userId}`, { headers: { 'access-token': token } });
+              if (avatarResp.data && avatarResp.data.url) {
+                profileImageUrl = avatarResp.data.url;
+              }
+            }
+          } catch (err) {
+            
+          }
+          setUserData(prevData => ({
+            ...prevData,
+            _id: user.id,
+            nome: user.nome || user.fullName || '',
+            email: user.email || '',
+            cpf: user.cpf || '',
+            celular: user.celular || user.telefone || '',
+            endereco: fullAddress || '',
+            profileImage: profileImageUrl,
+          }));
+    } catch (error) {
+      console.error('Erro ao obter os dados do usuário:', error);
+      // Em caso de erro real, limpa estado e informa o usuário
+      setUserData({
+        _id: "",
+        nome: "",
+        email: "",
+        profileImage: "",
+        pontos: 0,
+      });
+      showAlert({
+        title: 'Erro',
+        message: 'Não foi possível carregar os dados do perfil.',
+        confirmText: 'OK',
+        confirmColor: theme.colors.error,
+        showCancelButton: false,
+      });
     } finally {
-      // garantir que, qualquer que seja o resultado da chamada ao backend,
-      // se o usuário tiver uma imagem salva localmente ela seja usada.
-      try {
-        const stored = await AsyncStorage.getItem('profileImage');
-        if (stored) {
-          setUserData(prev => ({ ...prev, profileImage: stored }));
-        }
-      } catch (err) {
-        console.error('Erro ao recuperar profileImage no finally:', err);
-      }
+      // finalizar carregamento (retirei o uso do AsyncStorage para imagem por persistência indesejada)
       setIsLoading(false);
     }
   };
@@ -291,7 +307,7 @@ export default function ProfileScreen() {
       showCancelButton: true,
       onConfirm: async () => {
         try {
-          await AsyncStorage.removeItem('profileImage');
+          // apenas atualiza estado local (não usamos mais AsyncStorage para imagens)
           setUserData(prev => ({ ...prev, profileImage: '' }));
           // tentar sincronizar com backend
           const token = await AsyncStorage.getItem('token');
@@ -306,7 +322,7 @@ export default function ProfileScreen() {
           }
           showAlert({ title: 'Sucesso', message: 'Foto removida.', confirmText: 'OK', showCancelButton: false });
         } catch (err) {
-          console.error('Erro ao remover profileImage do AsyncStorage:', err);
+          console.error('Erro ao remover foto de perfil:', err);
           showAlert({ title: 'Erro', message: 'Não foi possível remover a foto. Tente novamente.', confirmColor: theme.colors.error, showCancelButton: false });
         }
       }
@@ -320,7 +336,7 @@ export default function ProfileScreen() {
     }
   }, [editModal.visible]);
 
- const pickImage = async () => {
+const pickImage = async () => {
   try {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
@@ -384,29 +400,51 @@ export default function ProfileScreen() {
 
         console.log('Resposta do upload:', uploadResponse.data);
 
-        // Se o upload for bem-sucedido, atualiza o estado local
-        if (uploadResponse.data && uploadResponse.data.url) {
+        // Se o upload foi bem-sucedido e retornou um ID
+        if (uploadResponse.data && uploadResponse.data.id) {
+          const imageId = uploadResponse.data.id;
           const imageUrl = uploadResponse.data.url;
           
-          // Atualiza o estado local
-          setUserData(prev => ({ ...prev, profileImage: imageUrl }));
-          
-          // Salva no AsyncStorage
-          await AsyncStorage.setItem('profileImage', imageUrl);
-          
-          // Atualiza o registro do usuário no backend com a URL da imagem
-          const userId = userData._id;
-          const updateUrl = userId ? `/usuario/${userId}` : `/usuario/me`;
+          console.log('Upload bem-sucedido. ID:', imageId, 'URL:', imageUrl);
+
+          // Busca a imagem de perfil pela rota /usuario/:id/avatar
+          let profileImageUrl = imageUrl; // usa a URL do upload como fallback
           
           try {
-            await api.put(updateUrl, { 
-              profileImage: imageUrl 
-            }, { 
-              headers: { 'access-token': token } 
-            });
-          } catch (updateErr) {
-            console.warn('Erro ao atualizar profileImage no usuário:', updateErr);
+            const userId = userData._id;
+            if (userId) {
+              const avatarResp = await api.get(`/usuario/${userId}/avatar`, {
+                headers: { 'access-token': token }
+              });
+              
+              if (avatarResp.data && avatarResp.data.url) {
+                profileImageUrl = avatarResp.data.url;
+                console.log('URL do avatar obtida:', profileImageUrl);
+              }
+            }
+          } catch (err) {
+            console.warn('Não foi possível obter a imagem de perfil via /avatar, usando URL do upload:', err);
           }
+          
+          // Tenta persistir o ID da imagem no perfil do usuário no backend
+          try {
+            const userId = userData._id;
+            const url = userId ? `/usuario/${userId}` : `/usuario/me`;
+            // Atualiza apenas se temos token e userId
+            if (token && (userId || token)) {
+              try {
+                await api.put(url, { imagemPerfilId: imageId }, { headers: { 'access-token': token } });
+                console.log('imagemPerfilId atualizado no backend com sucesso');
+              } catch (err) {
+                console.warn('Falha ao atualizar profileImage no backend (não crítico):', err);
+              }
+            }
+          } catch (err) {
+            console.warn('Erro ao tentar persistir profileImage no backend:', err);
+          }
+
+          // Atualiza o estado local
+          setUserData(prev => ({ ...prev, profileImage: profileImageUrl }));
           
           showAlert({ 
             title: 'Sucesso', 

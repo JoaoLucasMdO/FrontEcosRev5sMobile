@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'https://conferencing-power-certificate-introduction.trycloudflare.com/api',
+  baseURL: 'https://fuzzy-armstrong-vol-pants.trycloudflare.com/api',
   timeout: 10000,
 });
 
