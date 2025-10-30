@@ -67,7 +67,7 @@ export default function ProfileScreen() {
         headers: { "access-token": token }
       });
 
-      if (response.data && response.data.length > 0) {
+      if (response.data && response.data.pontos !== undefined) {
         setUserData(prevData => ({
           ...prevData,
           pontos: response.data[0].pontos
