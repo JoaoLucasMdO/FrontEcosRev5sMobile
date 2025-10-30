@@ -486,68 +486,250 @@ const pickImage = async () => {
   const closeEditModal = () => setEditModal({ visible: false, field: '', value: '' });
 
   const handleSaveField = async () => {
-    const { field, value } = editModal;
-    if (!field) return;
-    // prepara payload
-    let payload = {};
-    if (field === 'cpf') payload.cpf = unformat(value);
-    else if (field === 'celular') payload.celular = unformat(value);
-    else if (field === 'nome') payload.nome = value;
-    else if (field === 'email') payload.email = value;
-    else if (field === 'endereco') payload.endereco = value;
-  else if (field === 'bio') payload.bio = bioEditing || value;
-    // Validações
-    if (field === 'email' && !validateEmail(value)) {
-      showAlert({ title: 'Email inválido', message: 'Por favor verifique o email informado.', confirmColor: theme.colors.error, showCancelButton: false });
+  const { field, value } = editModal;
+  if (!field) return;
+  
+  // Prepara payload
+  let payload = {};
+  
+  if (field === 'celular') {
+    payload.celular = unformat(value);
+  } else if (field === 'nome') {
+    payload.nome = value.trim();
+  }
+  
+  // Validações
+  
+  if (field === 'celular') {
+    const phoneDigits = unformat(value);
+    if (phoneDigits.length < 10 || phoneDigits.length > 13) {
+      showAlert({ 
+        title: 'Celular inválido', 
+        message: 'Por favor informe um número de celular válido (10-11 dígitos).', 
+        confirmColor: theme.colors.error, 
+        showCancelButton: false 
+      });
       return;
     }
-    if (field === 'celular' && !validatePhone(value)) {
-      showAlert({ title: 'Celular inválido', message: 'Por favor informe um número de celular válido.', confirmColor: theme.colors.error, showCancelButton: false });
+  }
+  
+  if (field === 'nome' && (!value || value.trim().length < 3)) {
+    showAlert({ 
+      title: 'Nome inválido', 
+      message: 'O nome deve ter pelo menos 3 caracteres.', 
+      confirmColor: theme.colors.error, 
+      showCancelButton: false 
+    });
+    return;
+  }
+  
+  try {
+    const token = await AsyncStorage.getItem('token');
+    if (!token) {
+      showAlert({ 
+        title: 'Erro', 
+        message: 'Você precisa estar autenticado.', 
+        confirmColor: theme.colors.error, 
+        showCancelButton: false 
+      });
       return;
     }
-    try {
-      const token = await AsyncStorage.getItem('token');
-      if (!token) throw new Error('Token não encontrado');
 
-      const userId = userData._id;
-      const url = userId ? `/usuario/${userId}` : `/usuario/me`;
-      const response = await api.put(url, payload, { headers: { 'access-token': token } });
+    console.log('Enviando dados para atualização:', payload);
 
-      setUserData(prev => ({ ...prev, ...payload }));
-      showAlert({ title: 'Sucesso', message: 'Dados atualizados com sucesso.', confirmColor: theme.colors.success || theme.colors.primary, showCancelButton: false });
-      closeEditModal();
-    } catch (error) {
-      console.error('Erro ao salvar campo:', error);
-      showAlert({ title: 'Erro', message: 'Não foi possível salvar. Tente novamente.', confirmColor: theme.colors.error, showCancelButton: false });
-    }
-  };
+    // USA SEMPRE /usuario/me para usuário autenticado
+    const response = await api.put('/usuario/me', payload, {
+      headers: { 
+        'access-token': token,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    console.log('Resposta da atualização:', response.data);
+
+    // Atualiza o estado local
+    setUserData(prev => ({ ...prev, ...payload }));
+    
+    showAlert({ 
+      title: 'Sucesso', 
+      message: 'Dados atualizados com sucesso.', 
+      confirmColor: theme.colors.success || theme.colors.primary, 
+      showCancelButton: false 
+    });
+    
+    closeEditModal();
+    
+    // Recarrega os dados para garantir sincronização
+    await fetchUserData();
+    
+  } catch (error) {
+    console.error('Erro ao salvar campo:', error);
+    console.error('Detalhes do erro:', error.response?.data);
+    
+    const errorMessage = error.response?.data?.errors?.[0]?.msg 
+      || error.response?.data?.message 
+      || 'Não foi possível salvar. Tente novamente.';
+    
+    showAlert({ 
+      title: 'Erro', 
+      message: errorMessage, 
+      confirmColor: theme.colors.error, 
+      showCancelButton: false 
+    });
+  }
+};
 
   const handleSaveAddress = async () => {
-    // montar endereco simples a partir do formulário
-    const { logradouro, numero, complemento, bairro, cidade, estado, cep } = addressForm;
-    const enderecoConstruido = `${logradouro}${numero ? ', ' + numero : ''}${complemento ? ' - ' + complemento : ''}${bairro ? ' - ' + bairro : ''}${cidade ? ' - ' + cidade : ''}${estado ? ' - ' + estado : ''}${cep ? ' - CEP: ' + cep : ''}`;
-    // Valida CEP se preenchido
-    if (cep && !validateCEP(cep)) {
-      showAlert({ title: 'CEP inválido', message: 'Por favor informe um CEP com 8 dígitos.', confirmColor: theme.colors.error, showCancelButton: false });
+  const { logradouro, numero, complemento, bairro, cidade, estado, cep } = addressForm;
+  
+  // Validações básicas
+  if (!logradouro || logradouro.trim().length < 3) {
+    showAlert({ 
+      title: 'Endereço inválido', 
+      message: 'Por favor informe o logradouro (mínimo 3 caracteres).', 
+      confirmColor: theme.colors.error, 
+      showCancelButton: false 
+    });
+    return;
+  }
+  
+  // Valida CEP se preenchido
+  if (cep && !validateCEP(cep)) {
+    showAlert({ 
+      title: 'CEP inválido', 
+      message: 'Por favor informe um CEP válido com 8 dígitos.', 
+      confirmColor: theme.colors.error, 
+      showCancelButton: false 
+    });
+    return;
+  }
+
+  try {
+    const token = await AsyncStorage.getItem('token');
+    if (!token) {
+      showAlert({ 
+        title: 'Erro', 
+        message: 'Você precisa estar autenticado.', 
+        confirmColor: theme.colors.error, 
+        showCancelButton: false 
+      });
       return;
     }
 
-    try {
-      const token = await AsyncStorage.getItem('token');
-      if (!token) throw new Error('Token não encontrado');
-      const userId = userData._id;
-      const url = userId ? `/usuario/${userId}` : `/usuario/me`;
-      await api.put(url, { endereco: enderecoConstruido }, { headers: { 'access-token': token } });
-      setUserData(prev => ({ ...prev, endereco: enderecoConstruido }));
+    // Prepara o payload com os campos separados
+    const payload = {
+      logradouro: logradouro.trim(),
+      numero: numero ? numero.trim() : null,
+      complemento: complemento ? complemento.trim() : null,
+      bairro: bairro ? bairro.trim() : null,
+      cidade: cidade ? cidade.trim() : null,
+      estado: estado ? estado.trim().toUpperCase() : null,
+      cep: cep ? unformat(cep) : null
+    };
 
-  if (bioEditing) setUserData(prev => ({ ...prev, bio: bioEditing }));
-      showAlert({ title: 'Sucesso', message: 'Endereço atualizado.', confirmColor: theme.colors.success || theme.colors.primary, showCancelButton: false });
-      closeEditModal();
-    } catch (error) {
-      console.error('Erro ao salvar endereço:', error);
-      showAlert({ title: 'Erro', message: 'Não foi possível salvar o endereço. Tente novamente.', confirmColor: theme.colors.error, showCancelButton: false });
+    console.log('Enviando endereço para atualização:', payload);
+
+    // USA SEMPRE /usuario/me para usuário autenticado
+    const response = await api.put('/usuario/me', payload, {
+      headers: { 
+        'access-token': token,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    console.log('Resposta da atualização de endereço:', response.data);
+
+    // Monta o endereço formatado para exibição
+    const enderecoFormatado = `${logradouro}${numero ? ', ' + numero : ''}${complemento ? ' - ' + complemento : ''}${bairro ? ' - ' + bairro : ''}${cidade ? ' - ' + cidade : ''}${estado ? ' - ' + estado : ''}${cep ? ' - CEP: ' + cep : ''}`;
+    
+    // Atualiza o estado local
+    setUserData(prev => ({ ...prev, endereco: enderecoFormatado }));
+    
+    showAlert({ 
+      title: 'Sucesso', 
+      message: 'Endereço atualizado com sucesso.', 
+      confirmColor: theme.colors.success || theme.colors.primary, 
+      showCancelButton: false 
+    });
+    
+    closeEditModal();
+    
+    // Recarrega os dados para garantir sincronização
+    await fetchUserData();
+    
+  } catch (error) {
+    console.error('Erro ao salvar endereço:', error);
+    console.error('Detalhes do erro:', error.response?.data);
+    
+    const errorMessage = error.response?.data?.errors?.[0]?.msg 
+      || error.response?.data?.message 
+      || 'Não foi possível salvar o endereço. Tente novamente.';
+    
+    showAlert({ 
+      title: 'Erro', 
+      message: errorMessage, 
+      confirmColor: theme.colors.error, 
+      showCancelButton: false 
+    });
+  }
+};
+
+// ADICIONE também a função para buscar endereço por CEP (se não existir)
+const fetchAddressByCEP = async (cep) => {
+  const cepDigits = unformat(cep);
+  
+  if (cepDigits.length !== 8) {
+    showAlert({ 
+      title: 'CEP inválido', 
+      message: 'Por favor informe um CEP com 8 dígitos.', 
+      confirmColor: theme.colors.error, 
+      showCancelButton: false 
+    });
+    return;
+  }
+
+  try {
+    // Busca o endereço via API ViaCEP
+    const response = await fetch(`https://viacep.com.br/ws/${cepDigits}/json/`);
+    const data = await response.json();
+
+    if (data.erro) {
+      showAlert({ 
+        title: 'CEP não encontrado', 
+        message: 'Não foi possível encontrar o endereço para este CEP.', 
+        confirmColor: theme.colors.error, 
+        showCancelButton: false 
+      });
+      return;
     }
-  };
+
+    // Preenche o formulário com os dados encontrados
+    setAddressForm(prev => ({
+      ...prev,
+      logradouro: data.logradouro || prev.logradouro,
+      bairro: data.bairro || prev.bairro,
+      cidade: data.localidade || prev.cidade,
+      estado: data.uf || prev.estado,
+      cep: cepDigits
+    }));
+
+    showAlert({ 
+      title: 'Sucesso', 
+      message: 'Endereço encontrado! Verifique os dados e complete as informações necessárias.', 
+      confirmColor: theme.colors.success || theme.colors.primary, 
+      showCancelButton: false 
+    });
+
+  } catch (error) {
+    console.error('Erro ao buscar CEP:', error);
+    showAlert({ 
+      title: 'Erro', 
+      message: 'Não foi possível buscar o endereço. Verifique sua conexão e tente novamente.', 
+      confirmColor: theme.colors.error, 
+      showCancelButton: false 
+    });
+  }
+};
 
   const handleLogout = () => {
     showAlert({
