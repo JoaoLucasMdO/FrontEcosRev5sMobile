@@ -407,8 +407,7 @@ const pickImage = async () => {
           
           console.log('Upload bem-sucedido. ID:', imageId, 'URL:', imageUrl);
 
-          // Busca a imagem de perfil pela rota /usuario/:id/avatar
-          let profileImageUrl = imageUrl; // usa a URL do upload como fallback
+          let profileImageUrl = imageUrl; 
           
           try {
             const userId = userData._id;
@@ -514,7 +513,6 @@ const pickImage = async () => {
       const url = userId ? `/usuario/${userId}` : `/usuario/me`;
       const response = await api.put(url, payload, { headers: { 'access-token': token } });
 
-      // atualiza estado local com a resposta ou otimisticamente com payload
       setUserData(prev => ({ ...prev, ...payload }));
       showAlert({ title: 'Sucesso', message: 'Dados atualizados com sucesso.', confirmColor: theme.colors.success || theme.colors.primary, showCancelButton: false });
       closeEditModal();
@@ -541,7 +539,7 @@ const pickImage = async () => {
       const url = userId ? `/usuario/${userId}` : `/usuario/me`;
       await api.put(url, { endereco: enderecoConstruido }, { headers: { 'access-token': token } });
       setUserData(prev => ({ ...prev, endereco: enderecoConstruido }));
-  // também atualiza bio se existia no formulário
+
   if (bioEditing) setUserData(prev => ({ ...prev, bio: bioEditing }));
       showAlert({ title: 'Sucesso', message: 'Endereço atualizado.', confirmColor: theme.colors.success || theme.colors.primary, showCancelButton: false });
       closeEditModal();
@@ -668,24 +666,15 @@ const pickImage = async () => {
                 <TouchableOpacity onPress={changeProfilePhoto} style={[styles.cameraBadge, { backgroundColor: theme.colors.primary }] }>
                   <FontAwesome6 name="camera" size={16} color={theme.colors.text.inverse} />
                 </TouchableOpacity>
-                {/** remove badge positioned at top-right aligned with camera badge */}
-                <TouchableOpacity onPress={removeProfileImage} style={[styles.removeBadge, { position: 'absolute', right: -6, top: -6, backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border }]}>
-                  <MaterialCommunityIcons name="trash-can-outline" size={14} color={theme.colors.error} />
-                </TouchableOpacity>
               </View>
             </View>
             <Text style={[styles.nameText, { color: theme.colors.text.primary, fontSize: fontSize.lg }]}> 
               {userData.nome || 'Usuário'}
             </Text>
-            <Text style={[styles.subtitleText, { color: theme.colors.text.secondary, fontSize: fontSize.sm }]}>Desenvolvedora apaixonada por tecnologia e inovação.</Text>
             <View style={styles.pointsContainer}>
               <Text style={[styles.pointsNumber, { color: theme.colors.primary, fontSize: fontSize.xl || fontSize.lg + 4 }]}>{userData.pontos || 0}</Text>
               <Text style={[styles.pointsLabel, { color: theme.colors.text.secondary, fontSize: fontSize.md }]}>Pontos</Text>
             </View>
-            <TouchableOpacity style={[styles.editProfileButton, { backgroundColor: theme.colors.primary }]} onPress={() => openEditModal('bio')}>
-              <FontAwesome6 name="pen" size={16} color={theme.colors.text.inverse} />
-              <Text style={[styles.editProfileText, { color: theme.colors.text.inverse, fontSize: fontSize.md }]}>  Editar Perfil</Text>
-            </TouchableOpacity>
           </View>
         </View>
         <View style={[styles.infoSection, { marginTop: 10 }]}>
