@@ -1,49 +1,12 @@
 {
   "expo": {
-    "name": "EcosRev",
-    "slug": "ecosrev",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
-    "splash": {
-      "resizeMode": "contain",
-      "backgroundColor": "#fafafa"
-    },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
-    "ios": {
-      "supportsTablet": true
-    },
-    "android": {
-      
-      "usesCleartextTraffic": true,
-      
-      "adaptiveIcon": {
-        "backgroundColor": "#ffffff"
-      },
-      "permissions": [
-        "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO"
-      ],
-      "newArchEnabled": true,
-      "package": "com.EcosRev.EcosRevApp"
-    },
-    "web": {},
-    "plugins": [
-      [
-        "expo-camera",
-        {
-          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera."
-        }
-      ],
-      "expo-font"
-    ],
     "extra": {
       "eas": {
-        "projectId": "1fe31fa5-111b-4650-aaed-a9c048328ef8"
+        "projectId": "9d7bba4f-e383-4807-ab8d-ff3a53774db1"
       }
+    },
+    "android": {
+      "package": "com.jaolucas1234.ecosrev"
     }
   }
 }
