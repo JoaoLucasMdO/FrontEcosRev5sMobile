@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'https://fuzzy-armstrong-vol-pants.trycloudflare.com/api',
+  baseURL: 'https://backecosrev5s.onrender.com/api',
   timeout: 10000,
 });
 

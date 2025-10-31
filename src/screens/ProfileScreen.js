@@ -19,16 +19,25 @@ export default function ProfileScreen() {
   const navigation = useNavigation();
    const { logout } = useAuth();
   const theme = useTheme();
-  const { fontSize } = useFontSettings(); const [userData, setUserData] = useState({
-    _id: '',
-    nome: '',
-    email: '',
-    cpf: '',
-    celular: '',
-    endereco: '',
-    profileImage: '',
-    pontos: 0,
-  });
+  const { fontSize } = useFontSettings(); 
+ const [userData, setUserData] = useState({
+  _id: '',
+  nome: '',
+  email: '',
+  cpf: '',
+  celular: '',
+  endereco: '', 
+ 
+  logradouro: '',
+  numero: '',
+  complemento: '',
+  bairro: '',
+  cidade: '',
+  estado: '',
+  cep: '',
+  profileImage: '',
+  pontos: 0,
+});
 
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [editModal, setEditModal] = useState({ visible: false, field: '', value: '' });
@@ -77,115 +86,148 @@ export default function ProfileScreen() {
   };
 
 
-  const fetchUserData = async () => {
-    setIsLoading(true);
-    try {
-      const token = await AsyncStorage.getItem('token');
-      if (!token) {
-        // sem token: usuário não autenticado — limpa estado e informa ao usuário
-        setUserData({
-          _id: '',
-          nome: '',
-          email: '',
-          cpf: '',
-          celular: '',
-          endereco: '',
-          profileImage: '',
-          pontos: 0,
-          bio: ''
-        });
-        setIsLoading(false);
-        showAlert({
-          title: 'Não autenticado',
-          message: 'Faça login para acessar o perfil.',
-          confirmText: 'OK',
-          showCancelButton: false,
-        });
-        return;
-      }
-
-      const response = await api.get(`/usuario/me`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'access-token': token
-        },
-      });
-
-        const data = response.data;
-          const user = Array.isArray(data.results) ? data.results : data;
-
-          // Monta o endereço completo a partir dos campos separados, se existirem
-          const formatFullAddress = (u) => {
-            if (!u) return '';
-            // se já existe um campo 'endereco' stringify, usa ele
-            if (u.endereco && String(u.endereco).trim() !== '') return String(u.endereco);
-            // caso o backend retorne campos separados, monta uma string legível
-            const logradouro = u.logradouro || '';
-            const numero = u.numero || '';
-            const complemento = u.complemento || '';
-            const bairro = u.bairro || '';
-            const cidade = u.cidade || '';
-            const estado = u.estado || '';
-            const cep = u.cep || '';
-            const parts = [];
-            if (logradouro) parts.push(numero ? `${logradouro}, ${numero}` : logradouro);
-            if (complemento) parts.push(complemento);
-            if (bairro) parts.push(bairro);
-            const cityState = [cidade, estado].filter(Boolean).join(' - ');
-            if (cityState) parts.push(cityState);
-            if (cep) parts.push(`CEP: ${cep}`);
-            const constructed = parts.join(' - ');
-            // se não temos nada montado, pode haver um campo 'localizacao'
-            if (!constructed && u.localizacao) return String(u.localizacao);
-            return constructed;
-          };
-
-          const fullAddress = formatFullAddress(user);
-
-          let profileImageUrl = user.profileImage || 'https://randomuser.me/api/portraits/lego/1.jpg';
-          try {
-            const userId = user.id;
-            if (userId && token) {
-              const avatarResp = await api.get(`/usuario/avatar/${userId}`, { headers: { 'access-token': token } });
-              if (avatarResp.data && avatarResp.data.url) {
-                profileImageUrl = avatarResp.data.url;
-              }
-            }
-          } catch (err) {
-            
-          }
-          setUserData(prevData => ({
-            ...prevData,
-            _id: user.id,
-            nome: user.nome || user.fullName || '',
-            email: user.email || '',
-            cpf: user.cpf || '',
-            celular: user.celular || user.telefone || '',
-            endereco: fullAddress || '',
-            profileImage: profileImageUrl,
-          }));
-    } catch (error) {
-      console.error('Erro ao obter os dados do usuário:', error);
-      // Em caso de erro real, limpa estado e informa o usuário
+const fetchUserData = async () => {
+  setIsLoading(true);
+  try {
+    const token = await AsyncStorage.getItem('token');
+    if (!token) {
       setUserData({
-        _id: "",
-        nome: "",
-        email: "",
-        profileImage: "",
+        _id: '',
+        nome: '',
+        email: '',
+        cpf: '',
+        celular: '',
+        endereco: '',
+        logradouro: '',
+        numero: '',
+        complemento: '',
+        bairro: '',
+        cidade: '',
+        estado: '',
+        cep: '',
+        profileImage: '',
         pontos: 0,
+        bio: ''
       });
+      setIsLoading(false);
       showAlert({
-        title: 'Erro',
-        message: 'Não foi possível carregar os dados do perfil.',
+        title: 'Não autenticado',
+        message: 'Faça login para acessar o perfil.',
         confirmText: 'OK',
-        confirmColor: theme.colors.error,
         showCancelButton: false,
       });
-    } finally {
-      // finalizar carregamento (retirei o uso do AsyncStorage para imagem por persistência indesejada)
-      setIsLoading(false);
+      return;
     }
-  };
+
+    const response = await api.get(`/usuario/me`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'access-token': token
+      },
+    });
+
+    const data = response.data;
+    const user = Array.isArray(data.results) ? data.results : data;
+
+    // Função para formatar endereço completo
+    const formatFullAddress = (u) => {
+      if (!u) return '';
+      
+      // Se já existe um campo 'endereco' completo, usa ele
+      if (u.endereco && String(u.endereco).trim() !== '') return String(u.endereco);
+      
+      // Caso contrário, monta a partir dos campos separados
+      const logradouro = u.logradouro || '';
+      const numero = u.numero || '';
+      const complemento = u.complemento || '';
+      const bairro = u.bairro || '';
+      const cidade = u.cidade || '';
+      const estado = u.estado || '';
+      const cep = u.cep || '';
+      
+      const parts = [];
+      if (logradouro) {
+        parts.push(numero ? `${logradouro}, ${numero}` : logradouro);
+      }
+      if (complemento) parts.push(complemento);
+      if (bairro) parts.push(bairro);
+      
+      const cityState = [cidade, estado].filter(Boolean).join(' - ');
+      if (cityState) parts.push(cityState);
+      if (cep) parts.push(`CEP: ${cep}`);
+      
+      const constructed = parts.join(' - ');
+      
+      // Se não temos nada montado, pode haver um campo 'localizacao'
+      if (!constructed && u.localizacao) return String(u.localizacao);
+      
+      return constructed;
+    };
+
+    const fullAddress = formatFullAddress(user);
+
+    let profileImageUrl = user.profileImage || 'https://randomuser.me/api/portraits/lego/1.jpg';
+    try {
+      const userId = user.id;
+      if (userId && token) {
+        const avatarResp = await api.get(`/usuario/avatar/${userId}`, { 
+          headers: { 'access-token': token } 
+        });
+        if (avatarResp.data && avatarResp.data.url) {
+          profileImageUrl = avatarResp.data.url;
+        }
+      }
+    } catch (err) {
+      console.warn('Erro ao buscar avatar:', err);
+    }
+    
+    // IMPORTANTE: Armazena TANTO o endereço formatado QUANTO os campos separados
+    setUserData(prevData => ({
+      ...prevData,
+      _id: user.id,
+      nome: user.nome || user.fullName || '',
+      email: user.email || '',
+      cpf: user.cpf || '',
+      celular: user.celular || user.telefone || '',
+      endereco: fullAddress || '',
+      // Campos separados do endereço
+      logradouro: user.logradouro || '',
+      numero: user.numero || '',
+      complemento: user.complemento || '',
+      bairro: user.bairro || '',
+      cidade: user.cidade || '',
+      estado: user.estado || '',
+      cep: user.cep || '',
+      profileImage: profileImageUrl,
+    }));
+  } catch (error) {
+    console.error('Erro ao obter os dados do usuário:', error);
+    setUserData({
+      _id: "",
+      nome: "",
+      email: "",
+      profileImage: "",
+      pontos: 0,
+      endereco: '',
+      logradouro: '',
+      numero: '',
+      complemento: '',
+      bairro: '',
+      cidade: '',
+      estado: '',
+      cep: '',
+    });
+    showAlert({
+      title: 'Erro',
+      message: 'Não foi possível carregar os dados do perfil.',
+      confirmText: 'OK',
+      confirmColor: theme.colors.error,
+      showCancelButton: false,
+    });
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   // Função genérica para mostrar alertas, com controle de botão único e callback de cancelamento
   const showAlert = ({
@@ -252,46 +294,111 @@ export default function ProfileScreen() {
 
   // Heurística simples para decompor um endereco livre em campos
   const parseAddress = (endereco = '') => {
-    // tenta dividir por separadores comuns: ',' ou ' - '
-    if (!endereco) return { logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', estado: '', cep: '' };
-    // Remove 'CEP:' se existir
-    const cepMatch = endereco.match(/CEP[:]?\s*(\d{5}-?\d{3})/i);
-    const cep = cepMatch ? cepMatch[1].replace(/\D/g, '') : '';
-    let main = endereco.replace(/CEP[:]?\s*(\d{5}-?\d{3})/i, '');
-    // separar por ' - ' preferencialmente
-    const parts = main.split(' - ').map(p => p.trim()).filter(Boolean);
-    let logradouro = parts[0] || '';
-    let numero = '';
-    // se logradouro contem virgula, tenta separar numero
-    if (logradouro && logradouro.includes(',')) {
-      const [l, n, ...rest] = logradouro.split(',').map(s => s.trim());
+  // Retorna campos vazios se não houver endereço
+  if (!endereco || !endereco.trim()) {
+    return { 
+      logradouro: '', 
+      numero: '', 
+      complemento: '', 
+      bairro: '', 
+      cidade: '', 
+      estado: '', 
+      cep: '' 
+    };
+  }
+
+  // Extrai o CEP se existir
+  const cepMatch = endereco.match(/CEP[:]?\s*(\d{5}-?\d{3})/i);
+  const cep = cepMatch ? cepMatch[1].replace(/\D/g, '') : '';
+  
+  // Remove o CEP da string principal
+  let main = endereco.replace(/CEP[:]?\s*(\d{5}-?\d{3})/i, '').trim();
+  
+  // Separa por ' - ' 
+  const parts = main.split(' - ').map(p => p.trim()).filter(Boolean);
+  
+  // Inicializa variáveis
+  let logradouro = '';
+  let numero = '';
+  let complemento = '';
+  let bairro = '';
+  let cidade = '';
+  let estado = '';
+  
+  // Se temos pelo menos uma parte
+  if (parts.length > 0) {
+    // Primeira parte: pode conter logradouro e número separados por vírgula
+    const firstPart = parts[0];
+    if (firstPart.includes(',')) {
+      const [l, n] = firstPart.split(',').map(s => s.trim());
       logradouro = l || '';
       numero = n || '';
-      if (rest.length) parts.splice(0, 1, rest.join(' '));
-    }
-    const complemento = parts[1] || '';
-    const bairro = parts[2] || '';
-    const cidade = parts[3] || '';
-    const estado = parts[4] || '';
-    return { logradouro, numero, complemento, bairro, cidade, estado, cep };
-  };
-
-  const openEditModal = (field) => {
-    if (field === 'endereco') {
-      // tentar decompor endereco existente
-      const parsed = parseAddress(userData.endereco || '');
-      setAddressForm(parsed);
-      setEditModal({ visible: true, field, value: userData.endereco || '' });
-      setBioEditing(userData.bio || '');
-    } else if (field === 'bio') {
-      setBioEditing(userData.bio || '');
-      setEditModal({ visible: true, field, value: userData.bio || '' });
     } else {
-      setEditModal({ visible: true, field, value: userData[field] || '' });
+      logradouro = firstPart;
     }
-    // iniciar animação de entrada do modal
-    Animated.spring(modalAnim, { toValue: 1, useNativeDriver: true, friction: 8, tension: 40 }).start();
+    
+    // Segunda parte: complemento (se existir)
+    if (parts.length > 1) {
+      complemento = parts[1] || '';
+    }
+    
+    // Terceira parte: bairro (se existir)
+    if (parts.length > 2) {
+      bairro = parts[2] || '';
+    }
+    
+    // Quarta parte: cidade (se existir)
+    if (parts.length > 3) {
+      cidade = parts[3] || '';
+    }
+    
+    // Quinta parte: estado (se existir)
+    if (parts.length > 4) {
+      estado = parts[4] || '';
+    }
+  }
+  
+  return { 
+    logradouro, 
+    numero, 
+    complemento, 
+    bairro, 
+    cidade, 
+    estado, 
+    cep 
   };
+};
+
+const openEditModal = (field) => {
+  if (field === 'endereco') {
+    // USA DIRETAMENTE os campos separados armazenados no userData
+    setAddressForm({
+      logradouro: userData.logradouro || '',
+      numero: userData.numero || '',
+      complemento: userData.complemento || '',
+      bairro: userData.bairro || '',
+      cidade: userData.cidade || '',
+      estado: userData.estado || '',
+      cep: userData.cep || ''
+    });
+    
+    setEditModal({ visible: true, field, value: userData.endereco || '' });
+    setBioEditing(userData.bio || '');
+  } else if (field === 'bio') {
+    setBioEditing(userData.bio || '');
+    setEditModal({ visible: true, field, value: userData.bio || '' });
+  } else {
+    setEditModal({ visible: true, field, value: userData[field] || '' });
+  }
+  
+  // Iniciar animação de entrada do modal
+  Animated.spring(modalAnim, { 
+    toValue: 1, 
+    useNativeDriver: true, 
+    friction: 8, 
+    tension: 40 
+  }).start();
+};
 
   const changeProfilePhoto = () => {
     pickImage();
@@ -579,7 +686,7 @@ const pickImage = async () => {
   }
 };
 
-  const handleSaveAddress = async () => {
+const handleSaveAddress = async () => {
   const { logradouro, numero, complemento, bairro, cidade, estado, cep } = addressForm;
   
   // Validações básicas
@@ -640,10 +747,31 @@ const pickImage = async () => {
     console.log('Resposta da atualização de endereço:', response.data);
 
     // Monta o endereço formatado para exibição
-    const enderecoFormatado = `${logradouro}${numero ? ', ' + numero : ''}${complemento ? ' - ' + complemento : ''}${bairro ? ' - ' + bairro : ''}${cidade ? ' - ' + cidade : ''}${estado ? ' - ' + estado : ''}${cep ? ' - CEP: ' + cep : ''}`;
+    const parts = [];
+    if (logradouro) {
+      parts.push(numero ? `${logradouro}, ${numero}` : logradouro);
+    }
+    if (complemento) parts.push(complemento);
+    if (bairro) parts.push(bairro);
     
-    // Atualiza o estado local
-    setUserData(prev => ({ ...prev, endereco: enderecoFormatado }));
+    const cityState = [cidade, estado].filter(Boolean).join(' - ');
+    if (cityState) parts.push(cityState);
+    if (cep) parts.push(`CEP: ${cep}`);
+    
+    const enderecoFormatado = parts.join(' - ');
+    
+    // Atualiza o estado local COM TODOS OS CAMPOS
+    setUserData(prev => ({ 
+      ...prev, 
+      endereco: enderecoFormatado,
+      logradouro: logradouro.trim(),
+      numero: numero ? numero.trim() : '',
+      complemento: complemento ? complemento.trim() : '',
+      bairro: bairro ? bairro.trim() : '',
+      cidade: cidade ? cidade.trim() : '',
+      estado: estado ? estado.trim().toUpperCase() : '',
+      cep: cep ? unformat(cep) : ''
+    }));
     
     showAlert({ 
       title: 'Sucesso', 
